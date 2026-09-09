@@ -109,6 +109,41 @@ h1.hero-title { font-family: var(--font-display); font-weight: 700; letter-spaci
 
 /* sections */
 .section { padding: 36px 0 4px; }
+/* stats strip — one hairline, no boxes */
+.statstrip { display: grid; grid-template-columns: repeat(4, 1fr); margin: 28px 0 4px; padding: 18px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.statstrip div { padding: 0 22px; border-left: 1px solid var(--line); }
+.statstrip div:first-child { border-left: 0; padding-left: 0; }
+.statstrip dt { font-family: var(--font-display); font-size: 30px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+.statstrip dd { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
+
+/* how-it-works flow — numerals + hairline, no cards */
+.flow3 { list-style: none; margin: 22px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+.flow3 li { position: relative; padding-top: 20px; border-top: 2px solid var(--line); }
+.flow3 li:first-child { border-top-color: var(--primary); }
+.flow3 li:nth-child(2) { border-top-color: var(--teal); }
+.flow3 li:nth-child(3) { border-top-color: var(--amber); }
+.fnum { font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: 0.1em; color: var(--muted); }
+.flow3 b { display: block; font-family: var(--font-display); font-size: 18px; margin: 6px 0 4px; letter-spacing: -0.01em; }
+.flow3 p { margin: 0; color: var(--muted); font-size: 14.5px; max-width: 34ch; }
+
+/* severity spectrum — one interactive bar instead of five cards */
+.spectrum { position: relative; display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 20px; }
+.spec-seg { border: 0; border-radius: 12px; padding: 20px 0 16px; cursor: pointer; background: #eef3f9; background: color-mix(in srgb, var(--sc) 22%, #fff); transition: transform 0.12s ease, box-shadow 0.12s ease; }
+.spec-seg span { font: 700 15px var(--font-mono); color: var(--ink); opacity: 0.65; }
+.spec-seg:hover { transform: translateY(-2px); }
+.spec-seg.sel { background: var(--sc); box-shadow: var(--shadow); }
+.spec-seg.sel span { color: #fff; opacity: 1; }
+.spec-threshold { position: absolute; top: -24px; left: 40%; font: 600 11px var(--font-mono); letter-spacing: 0.06em; color: var(--amber); }
+.spec-detail { display: flex; gap: 14px; align-items: flex-start; margin-top: 16px; padding: 4px 0; }
+.spec-detail b { font-size: 17px; font-family: var(--font-display); }
+.spec-detail p { margin: 3px 0 8px; color: var(--muted); max-width: 62ch; }
+
+/* rural — plain list, one dark moment */
+.plainlist { list-style: none; margin: 0; padding: 6px 0 0; display: grid; gap: 0; align-content: start; }
+.plainlist li { display: grid; gap: 2px; padding: 15px 0; border-bottom: 1px solid var(--line); }
+.plainlist li:first-child { border-top: 1px solid var(--line); }
+.plainlist b { font-size: 15.5px; }
+.plainlist span { color: var(--muted); font-size: 14px; }
 .sec-head { max-width: 760px; margin-bottom: 16px; }
 .sec-head h2 { font-family: var(--font-display); font-size: clamp(24px, 3vw, 34px); letter-spacing: -0.03em; line-height: 1.12; margin: 8px 0 6px; }
 .sec-head p { margin: 0; color: var(--muted); }
@@ -225,8 +260,9 @@ footer.foot { padding: 20px 0 32px; }
   .levels { grid-template-columns: repeat(3, 1fr); }
 }
 @media (max-width: 860px) {
-  .hero-grid, .rural, .cards3 { grid-template-columns: 1fr; }
-  .stats { grid-template-columns: 1fr 1fr; }
+  .hero-grid, .rural, .cards3, .flow3 { grid-template-columns: 1fr; }
+  .stats, .statstrip { grid-template-columns: 1fr 1fr; }
+  .statstrip div:nth-child(3) { border-left: 0; padding-left: 0; }
   .nav-links { display: none; }
   .dash-grid { grid-template-columns: 1fr; }
   .levels { grid-template-columns: 1fr 1fr; }

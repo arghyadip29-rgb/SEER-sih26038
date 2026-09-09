@@ -3,11 +3,11 @@ import { Link } from 'react-router-dom';
 import { paintFundus } from '../lib/fundus.js';
 
 export const LEVELS = [
-  { n: 0, c: '#0e9f8a', t: 'No signs', d: 'Retina looks healthy. No spots or bleeds.', a: 'Yearly photo check' },
-  { n: 1, c: '#65a30d', t: 'Mild — tiny bulges only', d: 'A few tiny vessel bulges (microaneurysms).', a: 'Recheck 6–12 mo' },
-  { n: 2, c: '#b45309', t: 'Moderate — needs eye doctor', d: 'Bleeds and/or yellow deposits present.', a: 'Eye doctor · 4 wks' },
-  { n: 3, c: '#ea580c', t: 'Severe — many bleeds', d: 'Bleeds across zones, twisted vessels.', a: 'Urgent · days' },
-  { n: 4, c: '#dc2626', t: 'Advanced — new vessels', d: 'Fragile new vessels. Sight at risk.', a: 'Emergency · now' },
+  { n: 0, c: '#0e9f8a', t: 'No signs', d: 'Retina looks healthy. No spots or bleeds seen in this photo.', a: 'Yearly photo check' },
+  { n: 1, c: '#65a30d', t: 'Mild — tiny bulges only', d: 'A few pin-head vessel bulges (microaneurysms). Vision usually fine.', a: 'Recheck in 6–12 months' },
+  { n: 2, c: '#b45309', t: 'Moderate — needs an eye doctor', d: 'Bleeds and/or yellow deposits present. This is the referral line.', a: 'Eye doctor within 4 weeks' },
+  { n: 3, c: '#ea580c', t: 'Severe — many bleeds', d: 'Bleeds across zones, twisted bead-like vessels. Reading vision at risk.', a: 'Urgent — within days' },
+  { n: 4, c: '#dc2626', t: 'Advanced — new vessels', d: 'Fragile new vessels growing. Sudden bleeding risk.', a: 'Emergency — hospital now' },
 ];
 
 export function AppBar() {
@@ -74,6 +74,28 @@ function EyeCompare() {
   );
 }
 
+function Spectrum() {
+  const [sel, setSel] = useState(2);
+  const l = LEVELS[sel];
+  return (
+    <div>
+      <div className="spectrum" role="group" aria-label="Severity levels 0 to 4">
+        {LEVELS.map((x) => (
+          <button key={x.n} className={`spec-seg${sel === x.n ? ' sel' : ''}`} style={{ '--sc': x.c }}
+            aria-pressed={sel === x.n} onClick={() => setSel(x.n)} onMouseEnter={() => setSel(x.n)}>
+            <span>L{x.n}</span>
+          </button>
+        ))}
+        <span className="spec-threshold" aria-hidden="true">refer →</span>
+      </div>
+      <div className="spec-detail" aria-live="polite">
+        <span className="pill" style={{ background: l.c }}>L{l.n}</span>
+        <div><b>{l.t}</b><p>{l.d}</p><span className="act">→ {l.a}</span></div>
+      </div>
+    </div>
+  );
+}
+
 export default function Landing() {
   return (
     <>
@@ -83,75 +105,66 @@ export default function Landing() {
           <div>
             <span className="eyebrow">For PHCs · Portable-camera ready · English + हिन्दी</span>
             <h1 className="hero-title">Diabetes can steal sight before you feel it. We catch it early.</h1>
-            <p className="lead"><strong>Drishti</strong> checks a photo of the back of the eye (the <em>retina</em>) and <strong>shows its work</strong> — what it saw, where, and how sure it is. One health worker + one portable camera can screen a whole village. <strong>No jargon. 30-second verdict.</strong></p>
+            <p className="lead"><strong>Drishti</strong> checks a photo of the back of the eye and <strong>shows its work</strong> — what it saw, where, and how sure it is. <strong>No jargon. 30-second verdict.</strong></p>
             <div className="hero-cta">
               <Link className="btn btn-primary" to="/login">Open Doctor Dashboard →</Link>
               <a className="btn btn-outline" href="#how">See how it checks</a>
             </div>
-            <p className="micro">✓ Quality check first · ✓ Heatmap proof · ✓ Refer / no-refer in plain words · ✓ Low-internet friendly</p>
           </div>
           <EyeCompare />
         </div>
-        <div className="stats">
-          <div className="stat"><b>77M+</b><small>adults live with diabetes in India — 2nd highest in the world</small></div>
-          <div className="stat" style={{ borderTopColor: 'var(--teal)' }}><b>~18%</b><small>develop eye changes (retinopathy). Most feel nothing at first.</small></div>
-          <div className="stat" style={{ borderTopColor: 'var(--amber)' }}><b>90%</b><small>of vision loss can be prevented with an early eye check</small></div>
-          <div className="stat" style={{ borderTopColor: 'var(--danger)' }}><b>1 : 100k</b><small>eye doctors per rural population. Villages can’t wait in line.</small></div>
-        </div>
+        <dl className="statstrip">
+          <div><dt>77M+</dt><dd>adults with diabetes in India</dd></div>
+          <div><dt>~18%</dt><dd>develop eye changes, silently</dd></div>
+          <div><dt>90%</dt><dd>of vision loss is preventable</dd></div>
+          <div><dt>1 : 100k</dt><dd>eye doctors per rural population</dd></div>
+        </dl>
       </header>
+
       <main className="wrap">
         <section className="section" id="how">
-          <div className="sec-head">
-            <span className="kicker">How Drishti checks</span>
-            <h2>Not a black box. A careful assistant.</h2>
-            <p>Old AI says “refer” and walks away. Drishti checks the photo, finds early signs, then <b>points at them</b> so a doctor can confirm in under 30 seconds.</p>
-          </div>
-          <div className="cards3">
-            <article className="step"><span className="tag">STEP 1 · QUALITY GATE</span><h3>Is this photo even checkable?</h3><p>Scores focus, light and view. Blurry or dark? No guessing — retake guidance instead.</p><div className="plain"><b>In plain words →</b>“Too dark on the left. Wipe lens, dim room lights, retake.”</div></article>
-            <article className="step"><span className="tag">STEP 2 · FIND EARLY SIGNS</span><h3>Spots the 5 troublemakers</h3><p>Tiny vessel bulges, yellow deposits, bleeds, nerve-head changes, fragile new vessels — outlined on the photo.</p><div className="plain"><b>In plain words →</b>“3 tiny bulges + 2 yellow spots near the centre.”</div></article>
-            <article className="step"><span className="tag">STEP 3 · GRADE + PROOF</span><h3>Level 0–4 + heatmap + next step</h3><p>International 5-level scale, confidence score, attention map, one-line referral note.</p><div className="plain"><b>In plain words →</b>“Level 2 — needs an eye doctor within 4 weeks.”</div></article>
-          </div>
+          <div className="sec-head"><span className="kicker">How Drishti checks</span>
+            <h2>Not a black box. A careful assistant.</h2></div>
+          <ol className="flow3">
+            <li><span className="fnum">01</span><div><b>Is this photo checkable?</b><p>Focus, light, view — scored first. Blurry means retake help, never a guess.</p></div></li>
+            <li><span className="fnum">02</span><div><b>Find the early signs</b><p>Tiny bulges, yellow deposits, bleeds, fragile new vessels — outlined on the photo.</p></div></li>
+            <li><span className="fnum">03</span><div><b>Grade + proof</b><p>Level 0–4, confidence, heatmap, and a one-line next step. Confirmed in 30 seconds.</p></div></li>
+          </ol>
         </section>
+
         <section className="section" id="levels">
-          <div className="sec-head"><span className="kicker">Levels 0–4 · No jargon</span><h2>What each level means for the patient</h2><p>Same scale eye doctors use worldwide — translated into what to <b>do next</b>.</p></div>
-          <div className="levels">
-            {LEVELS.map((l) => (
-              <div className="level" key={l.n}>
-                <div className="bar" style={{ background: l.c }} />
-                <div className="body"><span className="tag">LEVEL {l.n}</span><b>{l.t}</b><p>{l.d}</p><span className="act">→ {l.a}</span></div>
-              </div>
-            ))}
-          </div>
+          <div className="sec-head"><span className="kicker">Levels 0–4 · No jargon</span>
+            <h2>One spectrum, one referral line.</h2>
+            <p>Same scale eye doctors use worldwide. Level 2 is where action starts.</p></div>
+          <Spectrum />
         </section>
+
         <section className="section" id="rural">
-          <div className="sec-head"><span className="kicker">Built for the field</span><h2>Made for dusty rooms, shaky power, slow net</h2></div>
+          <div className="sec-head"><span className="kicker">Built for the field</span>
+            <h2>Made for dusty rooms, shaky power, slow net.</h2></div>
           <div className="rural">
-            <div className="rural-card">
-              <h3 style={{ fontFamily: 'var(--font-display)', margin: 0, fontSize: 20 }}>A PHC kit that just works</h3>
-              <p style={{ color: 'var(--muted)', fontSize: 14 }}>One health worker, one portable camera, one laptop.</p>
-              <ul className="checks">
-                <li><span className="tick">✓</span><span><b>Forgiving with field photos.</b> Auto-evens light and haze. Rejects unusable ones with retake help.</span></li>
-                <li><span className="tick">✓</span><span><b>Light to send.</b> ~150 KB per case. Works offline, syncs later.</span></li>
-                <li><span className="tick">✓</span><span><b>30-second doctor check.</b> Annotated report + heatmap. Approve, edit, or overrule.</span></li>
-                <li><span className="tick">✓</span><span><b>Plans at district scale.</b> Backend sizes load for 1,00,000+ patients/year.</span></li>
-              </ul>
-            </div>
+            <ul className="plainlist">
+              <li><b>Forgiving with field photos.</b><span>Auto-evens light and haze; rejects the unusable with retake help.</span></li>
+              <li><b>Light to send.</b><span>~150 KB a case. Offline-first, syncs later.</span></li>
+              <li><b>30-second doctor check.</b><span>Annotated report + heatmap. Approve, edit, or overrule.</span></li>
+              <li><b>District scale.</b><span>Sized for 1,00,000+ patients a year, over 90% catch rate.</span></li>
+            </ul>
             <div className="rural-card dark">
               <span className="kicker" style={{ color: '#9ec1ff' }}>Accuracy target · SIH26038</span>
-              <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 30, margin: '8px 0 4px', lineHeight: 1.1 }}>&gt;90% catch rate<br />&gt;85% correct rejections</h3>
+              <h3>&gt;90% catch rate<br />&gt;85% correct rejections</h3>
               <p>For <i>referable</i> disease (Level 2+). Node API mirrors the MATLAB pipeline: quality → enhance → segment → grade → explain.</p>
               <div style={{ marginTop: 14 }}><Link className="btn btn-white" to="/login">Open Doctor Dashboard →</Link></div>
             </div>
           </div>
-          <div className="banner">
-            <h2>One photo can save a farmer’s sight.</h2>
-            <p>Upload a retina photo. Get a level, a heatmap, and a next step — then ask the assistant anything, in simple words.</p>
-            <div style={{ marginTop: 14, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              <Link className="btn btn-white" to="/login">Launch Doctor Dashboard →</Link>
-              <span className="micro" style={{ color: '#d3e2fb', alignSelf: 'center' }}>React + Vite · Node API · SIH26038 demo</span>
-            </div>
-          </div>
         </section>
+
+        <div className="banner">
+          <h2>One photo can save a farmer’s sight.</h2>
+          <p>Upload a retina photo. Get a level, a heatmap, and a next step — then ask the assistant anything, in simple words.</p>
+          <div style={{ marginTop: 14, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <Link className="btn btn-white" to="/login">Launch Doctor Dashboard →</Link>
+          </div>
+        </div>
       </main>
       <footer className="wrap foot"><div className="foot-in"><span>DRISHTI · SIH26038 · Explainable AI for Diabetic Retinopathy Screening</span><span>Prototype demo — not a medical device. Doctor must confirm.</span></div></footer>
     </>
