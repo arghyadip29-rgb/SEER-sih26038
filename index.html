@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Drishti — Clear Sight for Every Village · SIH26038</title>
+<meta name="description" content="Explainable AI for diabetic eye screening in rural India. Photo check, plain-word verdict, and show-its-work heatmaps in 30 seconds.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F6F8FF;
+  --paper-2:#FFFFFF;
+  --ink:#16215A;
+  --ink-soft:#3D467A;
+  --coral:#FF4D2E;
+  --marigold:#FFB422;
+  --teal:#00B5AC;
+  --teal-deep:#0A7C78;
+  --grape:#6C4DFF;
+  --grape-soft:#ECE7FF;
+  --peach:#FFE8D6;
+  --mint:#D8F5F0;
+  --butter:#FFF3C9;
+  --line:#16215A;
+  --r-lg:22px;
+  --r-md:16px;
+  --r-sm:12px;
+  --shadow:5px 5px 0 var(--ink);
+  --shadow-sm:3px 3px 0 var(--ink);
+  --font-display:"Bricolage Grotesque",system-ui,sans-serif;
+  --font-body:"Hanken Grotesk",system-ui,sans-serif;
+  --font-mono:"IBM Plex Mono",monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  font-family:var(--font-body);
+  background:var(--paper);
+  background-image:radial-gradient(#16215A18 1.4px, transparent 1.4px);
+  background-size:22px 22px;
+  color:var(--ink);
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:inherit}
+::selection{background:var(--marigold);color:var(--ink)}
+:focus-visible{outline:3px solid var(--grape);outline-offset:3px;border-radius:6px}
+.wrap{max-width:1160px;margin:0 auto;padding:0 20px}
+/* ---------- top bar ---------- */
+.topbar{
+  position:sticky;top:12px;z-index:50;
+  margin:12px auto 0;max-width:1160px;padding:0 20px;
+}
+.nav{
+  display:flex;align-items:center;gap:14px;
+  background:var(--paper-2);
+  border:2px solid var(--ink);border-radius:999px;
+  padding:8px 10px 8px 14px;
+  box-shadow:var(--shadow-sm);
+}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-weight:800;letter-spacing:-.02em;font-size:20px;text-decoration:none}
+.logo-mark{
+  width:38px;height:38px;border-radius:50%;border:2px solid var(--ink);
+  background:conic-gradient(from 20deg, var(--coral), var(--marigold), var(--teal), var(--grape), var(--coral));
+  display:grid;place-items:center;position:relative;flex:none;
+}
+.logo-mark::after{
+  content:"";width:18px;height:18px;background:#fff;border:2px solid var(--ink);border-radius:50%;
+}
+.logo-mark::before{
+  content:"";position:absolute;width:8px;height:8px;background:var(--ink);border-radius:50%;z-index:1;
+}
+.nav-links{display:flex;gap:2px;margin-left:6px;flex:1}
+.nav-links a{
+  text-decoration:none;font-weight:600;font-size:14.5px;padding:8px 13px;border-radius:999px;
+}
+.nav-links a:hover{background:var(--grape-soft)}
+.ps-chip{
+  font-family:var(--font-mono);font-size:12px;font-weight:600;
+  background:var(--ink);color:#fff;border-radius:999px;padding:7px 12px;white-space:nowrap;
+}
+.btn{
+  appearance:none;border:2px solid var(--ink);border-radius:999px;
+  font-family:var(--font-body);font-weight:700;font-size:15px;
+  padding:12px 20px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;
+  transition:transform .15s ease, box-shadow .15s ease;
+  box-shadow:var(--shadow-sm);
+}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.btn-primary{background:var(--coral);color:#fff}
+.btn-primary:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--ink)}
+.btn-ink{background:var(--ink);color:#fff}
+.btn-light{background:#fff;color:var(--ink)}
+.btn-teal{background:var(--teal);color:#062E2C}
+.btn-grape{background:var(--grape);color:#fff}
+.btn-sm{padding:9px 15px;font-size:14px}
+/* ---------- hero ---------- */
+.hero{padding:34px 0 10px}
+.hero-grid{
+  display:grid;grid-template-columns:1.05fr .95fr;gap:18px;align-items:stretch;
+}
+.eyebrow{
+  font-family:var(--font-mono);font-size:12.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  display:inline-flex;align-items:center;gap:8px;
+  background:#fff;border:2px solid var(--ink);border-radius:999px;padding:7px 13px;box-shadow:var(--shadow-sm);
+}
+.eyebrow .dot{width:10px;height:10px;border-radius:50%;background:var(--teal);border:2px solid var(--ink);animation:blink 1.8s infinite}
+@keyframes blink{0%,100%{background:var(--teal)}50%{background:var(--marigold)}}
+h1{
+  font-family:var(--font-display);font-weight:800;letter-spacing:-.04em;line-height:.95;
+  font-size:clamp(44px,6.2vw,78px);margin:16px 0 14px;text-wrap:balance;
+}
+h1 .hl-coral{background:linear-gradient(transparent 62%, var(--marigold) 62%, var(--marigold) 94%, transparent 94%)}
+h1 .hl-eye{position:relative;white-space:nowrap}
+h1 .hl-eye svg{position:absolute;left:-4%;right:-4%;bottom:-.12em;width:108%;height:.38em}
+.lead{font-size:18.5px;color:var(--ink-soft);max-width:52ch;margin:0 0 18px}
+.lead strong{color:var(--ink)}
+.hero-cta{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:6px 0 14px}
+.micro{font-family:var(--font-mono);font-size:12.5px;color:var(--ink-soft)}
+.hero-card{
+  background:var(--paper-2);border:2px solid var(--ink);border-radius:var(--r-lg);
+  box-shadow:var(--shadow);overflow:hidden;
+}
+.hero-card-top{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:12px 16px;border-bottom:2px solid var(--ink);background:var(--butter);
+}
+.hero-card-top .mono{font-family:var(--font-mono);font-size:12px;font-weight:600;letter-spacing:.06em}
+.toggle-pill{
+  display:flex;background:#fff;border:2px solid var(--ink);border-radius:999px;padding:3px;gap:3px;
+}
+.toggle-pill button{
+  border:0;border-radius:999px;padding:7px 13px;font:600 13px var(--font-body);cursor:pointer;background:transparent;color:var(--ink);
+}
+.toggle-pill button[aria-pressed="true"]{background:var(--ink);color:#fff}
+/* eye compare */
+.eye-compare{position:relative;background:#0E1330;min-height:360px;touch-action:none;user-select:none}
+.eye-compare img, .eye-compare canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.eye-layer{position:absolute;inset:0;overflow:hidden}
+.eye-layer.ai{clip-path:inset(0 0 0 var(--split,52%));}
+.eye-badge{
+  position:absolute;top:12px;font-family:var(--font-mono);font-size:11.5px;font-weight:600;letter-spacing:.06em;
+  padding:6px 10px;border-radius:999px;border:2px solid var(--ink);
+}
+.eye-badge.left{left:12px;background:var(--mint)}
+.eye-badge.right{right:12px;background:#FFD9D1}
+.eye-divider{
+  position:absolute;top:0;bottom:0;left:var(--split,52%);width:3px;background:#fff;box-shadow:0 0 0 2px var(--ink);cursor:ew-resize;
+}
+.eye-handle{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:46px;height:46px;border-radius:50%;background:var(--marigold);border:2.5px solid var(--ink);
+  display:grid;place-items:center;font-weight:800;font-size:18px;box-shadow:2px 2px 0 var(--ink);
+}
+.eye-foot{
+  display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;
+  padding:13px 16px;border-top:2px solid var(--ink);background:#fff;
+}
+.legend{display:flex;gap:8px;flex-wrap:wrap}
+.legend span{font-family:var(--font-mono);font-size:11.5px;font-weight:600;border:2px solid var(--ink);border-radius:999px;padding:4px 10px;background:var(--paper)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:baseline;border:1.5px solid var(--ink)}
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:18px 0 6px}
+.stat{
+  border:2px solid var(--ink);border-radius:var(--r-md);padding:14px 15px;box-shadow:var(--shadow-sm);
+  min-height:124px;display:flex;flex-direction:column;justify-content:center;gap:4px;
+}
+.stat b{font-family:var(--font-display);font-size:30px;letter-spacing:-.03em;line-height:1}
+.stat small{font-size:13.5px;line-height:1.4;color:#2B356B}
+.stat.s1{background:var(--mint)} .stat.s2{background:var(--butter)} .stat.s3{background:#FFE1E1} .stat.s4{background:var(--grape-soft)}
+/* sections */
+.section{padding:34px 0 6px}
+.sec-head{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-bottom:16px;flex-wrap:wrap}
+.sec-head h2{font-family:var(--font-display);font-size:clamp(28px,3.6vw,42px);letter-spacing:-.03em;line-height:1;margin:8px 0 6px}
+.sec-head p{margin:0;color:var(--ink-soft);max-width:60ch}
+.kicker{font-family:var(--font-mono);font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;background:var(--ink);color:#fff;display:inline-block;padding:6px 12px;border-radius:999px}
+.cards3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.step{
+  background:#fff;border:2px solid var(--ink);border-radius:var(--r-lg);box-shadow:var(--shadow-sm);
+  padding:18px;position:relative;overflow:hidden;
+}
+.step::after{content:"";position:absolute;left:0;right:0;top:0;height:8px}
+.step.n1::after{background:var(--teal)} .step.n2::after{background:var(--marigold)} .step.n3::after{background:var(--grape)}
+.step h3{font-family:var(--font-display);font-size:21px;margin:10px 0 6px;letter-spacing:-.02em}
+.step p{margin:0 0 10px;color:var(--ink-soft);font-size:15px}
+.step .plain{background:var(--paper);border:1.5px dashed var(--ink);border-radius:var(--r-sm);padding:10px 12px;font-size:13.5px}
+.step .plain b{display:block;font-size:13px}
+.tag{font-family:var(--font-mono);font-size:11.5px;font-weight:600;letter-spacing:.06em;border:2px solid var(--ink);border-radius:999px;padding:4px 10px;display:inline-block;background:var(--paper)}
+/* scale */
+.scale{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.level{
+  border:2px solid var(--ink);border-radius:var(--r-md);overflow:hidden;background:#fff;box-shadow:var(--shadow-sm);
+  display:flex;flex-direction:column;
+}
+.level .swatch{height:86px;display:grid;place-items:center;border-bottom:2px solid var(--ink);position:relative}
+.level .swatch svg{width:64px;height:64px}
+.level .body{padding:12px 13px}
+.level b{font-size:15px}
+.level p{font-size:13px;color:var(--ink-soft);margin:4px 0 8px}
+.level .act{font-family:var(--font-mono);font-size:11.5px;font-weight:600;padding:5px 10px;border-radius:999px;border:2px solid var(--ink);display:inline-block}
+/* rural */
+.rural{
+  display:grid;grid-template-columns:1.1fr .9fr;gap:14px;margin-top:6px;
+}
+.rural-card{border:2px solid var(--ink);border-radius:var(--r-lg);box-shadow:var(--shadow);padding:20px;background:#fff}
+.rural-card.dark{background:var(--ink);color:#EDEBFF;border-color:var(--ink)}
+.rural-card.dark p{color:#C6C9E8}
+.checks{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:10px}
+.checks li{display:flex;gap:10px;align-items:flex-start;background:var(--paper);border:2px solid var(--ink);border-radius:var(--r-sm);padding:10px 12px;font-size:14.5px;color:var(--ink)}
+.rural-card.dark .checks li{background:#232C6B;border-color:#9AA0FF;color:#fff}
+.tick{flex:none;width:26px;height:26px;border-radius:50%;background:var(--teal);border:2px solid var(--ink);display:grid;place-items:center;font-weight:800;color:#06302D}
+/* cta banner */
+.banner{
+  margin:30px 0 10px;border:2px solid var(--ink);border-radius:26px;box-shadow:var(--shadow);
+  background:linear-gradient(100deg, var(--coral) 0%, #FF7A3D 34%, var(--marigold) 62%, var(--grape) 100%);
+  padding:28px;color:#fff;position:relative;overflow:hidden;
+}
+.banner::before{content:"";position:absolute;inset:0;background-image:radial-gradient(#ffffff55 1.5px, transparent 1.5px);background-size:18px 18px;pointer-events:none}
+.banner-inner{position:relative;display:flex;gap:18px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.banner h2{font-family:var(--font-display);font-size:clamp(28px,4vw,44px);margin:0;letter-spacing:-.03em;line-height:1;color:#fff;text-shadow:2px 2px 0 var(--ink)}
+.banner p{margin:8px 0 0;color:#fff;max-width:56ch;font-weight:500}
+.banner .btn{box-shadow:4px 4px 0 var(--ink)}
+footer{padding:22px 0 30px;color:var(--ink-soft);font-size:13.5px}
+footer .foot{
+  display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;
+  border:2px solid var(--ink);border-radius:var(--r-md);background:#fff;padding:12px 16px;box-shadow:var(--shadow-sm);
+  font-family:var(--font-mono);font-size:12px;
+}
+/* ---------- dashboard ---------- */
+.view{display:none}
+.view.active{display:block}
+.dash-top{padding:22px 0 12px}
+.dash-grid{display:grid;grid-template-columns:300px 1fr 360px;gap:14px;align-items:start}
+.panel{background:#fff;border:2px solid var(--ink);border-radius:var(--r-lg);box-shadow:var(--shadow-sm);overflow:hidden}
+.panel-h{padding:12px 15px;border-bottom:2px solid var(--ink);display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:700}
+.panel-h .mono{font-family:var(--font-mono);font-size:11.5px;letter-spacing:.07em;color:var(--ink-soft)}
+.panel-b{padding:14px 15px}
+.drop{
+  border:2.5px dashed var(--ink);border-radius:var(--r-md);background:var(--paper);
+  padding:18px;text-align:center;cursor:pointer;transition:.15s;
+}
+.drop:hover,.drop:focus-visible{background:var(--butter)}
+.drop.drag{background:var(--butter);transform:scale(1.01)}
+.drop input{display:none}
+.drop .big{font-family:var(--font-display);font-weight:700;font-size:17px;margin:8px 0 4px}
+.drop p{margin:0;font-size:13.5px;color:var(--ink-soft)}
+.field{margin:12px 0}
+.field label{display:block;font-family:var(--font-mono);font-size:11.5px;font-weight:600;letter-spacing:.06em;margin-bottom:6px}
+.field input,.field select{
+  width:100%;border:2px solid var(--ink);border-radius:10px;padding:10px 12px;font:500 14px var(--font-body);background:#fff;color:var(--ink);
+}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sample-btns{display:grid;gap:8px;margin-top:10px}
+.sample-btns button{
+  border:2px solid var(--ink);border-radius:12px;background:var(--paper);padding:10px 12px;cursor:pointer;text-align:left;
+  display:flex;gap:10px;align-items:center;font:600 13.5px var(--font-body);
+}
+.sample-btns button:hover{background:var(--grape-soft)}
+.sample-btns .dotS{width:14px;height:14px;border-radius:50%;border:2px solid var(--ink);flex:none}
+/* viewer */
+.viewer{background:#0E1330;border-bottom:2px solid var(--ink);position:relative;min-height:380px;display:grid;place-items:center;overflow:hidden}
+.viewer canvas{max-width:100%;max-height:440px;width:100%;height:auto;display:block}
+.viewer-empty{color:#C9CDEB;text-align:center;padding:40px 20px}
+.viewer-empty .ring{width:86px;height:86px;border-radius:50%;border:3px dashed #7C84C9;display:grid;place-items:center;margin:0 auto 12px;font-size:30px}
+.seg-bar{display:flex;gap:8px;flex-wrap:wrap;padding:12px 14px;border-bottom:2px solid var(--ink);background:var(--butter);align-items:center}
+.seg-bar .lbl{font-family:var(--font-mono);font-size:11.5px;font-weight:600;letter-spacing:.06em}
+.chip{
+  border:2px solid var(--ink);border-radius:999px;padding:7px 13px;font:600 13px var(--font-body);cursor:pointer;background:#fff;
+}
+.chip[aria-pressed="true"]{background:var(--ink);color:#fff}
+.opacity-row{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#fff;border-bottom:2px solid var(--ink);font-family:var(--font-mono);font-size:12px}
+input[type="range"]{accent-color:var(--grape);width:100%}
+.pipe{padding:12px 14px;display:grid;gap:8px}
+.pstep{display:flex;gap:10px;align-items:center;border:2px solid var(--ink);border-radius:12px;padding:9px 11px;background:var(--paper);font-size:13.5px}
+.pstep .n{width:26px;height:26px;border-radius:50%;border:2px solid var(--ink);display:grid;place-items:center;font:700 12px var(--font-mono);background:#fff;flex:none}
+.pstep[data-state="run"]{background:var(--butter)} .pstep[data-state="run"] .n{background:var(--marigold);animation:pulse 1s infinite}
+.pstep[data-state="done"]{background:var(--mint)} .pstep[data-state="done"] .n{background:var(--teal)}
+.pstep[data-state="bad"]{background:#FFE1E1} .pstep[data-state="bad"] .n{background:var(--coral);color:#fff}
+@keyframes pulse{50%{transform:scale(1.12)}}
+.pstep small{margin-left:auto;font-family:var(--font-mono);font-size:11px;color:var(--ink-soft)}
+/* verdict */
+.verdict-badge{border-radius:14px;border:2px solid var(--ink);padding:12px 13px;margin-bottom:12px;color:#fff}
+.verdict-badge.refer{background:linear-gradient(120deg,#FF4D2E,#B71E00)}
+.verdict-badge.watch{background:linear-gradient(120deg,#FFB422,#B26A00)}
+.verdict-badge.clear{background:linear-gradient(120deg,#00B5AC,#065F5B)}
+.verdict-badge h3{margin:0;font-family:var(--font-display);font-size:22px;letter-spacing:-.02em}
+.verdict-badge p{margin:4px 0 0;font-size:13.5px;opacity:.95}
+.meter{height:12px;border:2px solid var(--ink);border-radius:999px;background:#fff;overflow:hidden;margin:6px 0 4px}
+.meter i{display:block;height:100%;background:linear-gradient(90deg,var(--teal),var(--marigold),var(--coral));border-radius:999px}
+.kv{display:grid;grid-template-columns:1fr auto;gap:4px 10px;font-size:13.5px;margin:10px 0}
+.kv dt{color:var(--ink-soft)} .kv dd{margin:0;font-weight:700;font-family:var(--font-mono);font-size:13px}
+.findings{list-style:none;margin:10px 0;padding:0;display:grid;gap:8px}
+.findings li{border:2px solid var(--ink);border-radius:12px;padding:9px 11px;font-size:13.5px;background:var(--paper)}
+.findings li b{display:block;font-size:13px}
+.findings li .plain-en{color:var(--ink-soft)}
+.report-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+/* chat */
+.chat-log{display:flex;flex-direction:column;gap:10px;max-height:340px;overflow:auto;padding:4px 2px}
+.msg{max-width:92%;padding:10px 12px;border-radius:14px;border:2px solid var(--ink);font-size:13.8px;line-height:1.5}
+.msg.bot{background:var(--grape-soft);border-bottom-left-radius:4px;align-self:flex-start}
+.msg.user{background:var(--butter);border-bottom-right-radius:4px;align-self:flex-end}
+.msg .who{font-family:var(--font-mono);font-size:10.5px;font-weight:600;letter-spacing:.07em;display:block;margin-bottom:4px;opacity:.7}
+.quick{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}
+.quick button{font:600 12px var(--font-mono);border:2px solid var(--ink);border-radius:999px;background:#fff;padding:6px 11px;cursor:pointer}
+.quick button:hover{background:var(--mint)}
+.chat-input{display:flex;gap:8px;margin-top:8px}
+.chat-input input{flex:1;border:2px solid var(--ink);border-radius:999px;padding:11px 14px;font:500 14px var(--font-body)}
+.chat-input button{flex:none}
+.typing{display:inline-flex;gap:4px}
+.typing i{width:7px;height:7px;border-radius:50%;background:var(--ink);animation:tb 1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes tb{50%{opacity:.25;transform:translateY(-2px)}}
+.backlink{display:inline-flex;align-items:center;gap:8px;text-decoration:none;font-weight:700;font-size:14px;margin-bottom:10px}
+.toast{
+  position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;
+  background:var(--ink);color:#fff;border-radius:999px;padding:11px 18px;font:600 14px var(--font-body);
+  transition:.25s;z-index:99;box-shadow:0 8px 30px #16215A55;max-width:min(92vw,520px);text-align:center;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (max-width:1080px){
+  .dash-grid{grid-template-columns:1fr 1fr}
+  .dash-grid .panel.chat-panel{grid-column:1/-1}
+  .scale{grid-template-columns:repeat(3,1fr)}
+}
+@media (max-width:860px){
+  .hero-grid,.rural,.cards3{grid-template-columns:1fr}
+  .stats{grid-template-columns:1fr 1fr}
+  .nav-links{display:none}
+  .dash-grid{grid-template-columns:1fr}
+  .scale{grid-template-columns:1fr 1fr}
+}
+@media (max-width:520px){.stats,.scale{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body>
+
+<div id="view-landing" class="view active">
+  <div class="topbar">
+    <nav class="nav" aria-label="Main">
+      <a class="logo" href="#" aria-label="Drishti home"><span class="logo-mark" aria-hidden="true"></span>Drishti</a>
+      <div class="nav-links">
+        <a href="#how">How it checks</a>
+        <a href="#levels">Levels 0–4</a>
+        <a href="#rural">For rural PHCs</a>
+      </div>
+      <span class="ps-chip">SIH26038 · MathWorks</span>
+      <button class="btn btn-primary btn-sm" data-go-dash>Doctor Login →</button>
+    </nav>
+  </div>
+
+  <header class="wrap hero">
+    <div class="hero-grid">
+      <div>
+        <span class="eyebrow"><span class="dot"></span>For PHCs · Portable camera ready · English + हिन्दी</span>
+        <h1>Diabetes can steal <span class="hl-coral">sight</span> before you feel it. <span class="hl-eye">We catch it early.<svg viewBox="0 0 200 20" preserveAspectRatio="none" aria-hidden="true"><path d="M4 14 Q 60 4 100 12 T 196 8" fill="none" stroke="#FF4D2E" stroke-width="7" stroke-linecap="round"/></svg></span></h1>
+        <p class="lead"><strong>Drishti</strong> checks a photo of the back of the eye (the <em>retina</em>) and <strong>shows its work</strong> — what it saw, where, and how sure it is. Built for SIH26038 so one health worker + one portable camera can screen a whole village. <strong>No jargon. 30-second verdict.</strong></p>
+        <div class="hero-cta">
+          <button class="btn btn-ink" data-go-dash>Open Doctor Dashboard →</button>
+          <a class="btn btn-light" href="#how">See how it checks</a>
+        </div>
+        <p class="micro">✓ Checks photo quality first &nbsp;·&nbsp; ✓ Heatmap proof &nbsp;·&nbsp; ✓ Refer / No-refer in plain words &nbsp;·&nbsp; ✓ Low-internet friendly</p>
+      </div>
+
+      <div class="hero-card" aria-label="Interactive demo: drag to compare original and AI view">
+        <div class="hero-card-top">
+          <span class="mono">● LIVE DEMO — DRAG THE HANDLE</span>
+          <div class="toggle-pill" role="group" aria-label="Demo view">
+            <button id="demoOrig" aria-pressed="false">Photo</button>
+            <button id="demoAi" aria-pressed="true">AI proof</button>
+          </div>
+        </div>
+        <div class="eye-compare" id="eyeCompare">
+          <canvas id="fundusOrig" width="800" height="560" aria-label="Simulated eye photo"></canvas>
+          <div class="eye-layer ai" id="aiLayer">
+            <canvas id="fundusAi" width="800" height="560" aria-label="Simulated AI heatmap"></canvas>
+          </div>
+          <span class="eye-badge left">◉ PHOTO</span>
+          <span class="eye-badge right">✦ AI HEATMAP</span>
+          <div class="eye-divider" id="eyeDiv"><div class="eye-handle" aria-hidden="true">↔</div></div>
+        </div>
+        <div class="eye-foot">
+          <div class="legend" aria-label="Legend">
+            <span><i style="background:#FF4D2E"></i>Bleed / spot</span>
+            <span><i style="background:#FFB422"></i>Yellow deposit</span>
+            <span><i style="background:#6C4DFF"></i>AI attention</span>
+            <span><i style="background:#00B5AC"></i>Healthy vessel</span>
+          </div>
+          <button class="btn btn-grape btn-sm" data-go-dash>Try on your photo →</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats" role="list" aria-label="Why this matters">
+      <div class="stat s1" role="listitem"><b>77M+</b><small>adults live with diabetes in India — 2nd highest in the world</small></div>
+      <div class="stat s2" role="listitem"><b>~18%</b><small>develop eye changes (retinopathy). Most feel nothing at first.</small></div>
+      <div class="stat s3" role="listitem"><b>90%</b><small>of vision loss can be prevented with an early eye check</small></div>
+      <div class="stat s4" role="listitem"><b>1 : 100k</b><small>eye doctors per rural population. Villages can't wait in line.</small></div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="section" id="how">
+      <div class="sec-head">
+        <div><span class="kicker">How Drishti checks</span><h2>Not a black box.<br>A careful assistant.</h2></div>
+        <p>Old AI says “refer” and walks away. Drishti checks the photo, finds early signs, then <b>points at them</b> so a doctor can confirm in under 30 seconds.</p>
+      </div>
+      <div class="cards3">
+        <article class="step n1"><span class="tag">STEP 1 · QUALITY GATE</span><h3>Is this photo even checkable?</h3><p>We score focus, light and view. Blurry or dark? We don’t guess — we tell you how to retake.</p><div class="plain"><b>In plain words →</b>“Too dark on the left. Wipe lens, dim room lights, retake.”</div></article>
+        <article class="step n2"><span class="tag">STEP 2 · FIND EARLY SIGNS</span><h3>Spots the 5 troublemakers</h3><p>Tiny vessel bulges, yellow deposits, bleeds, pale nerve head changes, fragile new vessels — outlined on the photo.</p><div class="plain"><b>In plain words →</b>“3 tiny bulges + 2 yellow spots near the centre. Vessels look tangled.”</div></article>
+        <article class="step n3"><span class="tag">STEP 3 · GRADE + PROOF</span><h3>Level 0–4 + heatmap + next step</h3><p>International 5-level scale, confidence score, attention map, and a one-line referral note a PHC doctor can act on.</p><div class="plain"><b>In plain words →</b>“Level 2 — needs an eye doctor within 4 weeks. Here’s why ↓”</div></article>
+      </div>
+    </section>
+
+    <section class="section" id="levels">
+      <div class="sec-head">
+        <div><span class="kicker" style="background:var(--coral)">Levels 0–4 · No jargon</span><h2>What each level means for the patient</h2></div>
+        <p>Same scale eye doctors use worldwide — translated into what to <b>do next</b>.</p>
+      </div>
+      <div class="scale" id="scaleRow"></div>
+    </section>
+
+    <section class="section" id="rural">
+      <div class="sec-head">
+        <div><span class="kicker" style="background:var(--teal-deep)">Built for the field</span><h2>Made for dusty rooms, shaky power, slow net</h2></div>
+      </div>
+      <div class="rural">
+        <div class="rural-card">
+          <h3 style="font-family:var(--font-display);margin:0;font-size:24px;letter-spacing:-.02em">A PHC kit that just works</h3>
+          <p style="color:var(--ink-soft)">One health worker, one portable fundus camera, one laptop. Drishti handles the rest.</p>
+          <ul class="checks">
+            <li><span class="tick">✓</span><span><b>Forgiving with field photos.</b> Auto-fixes light &amp; haze (CLAHE + clean-up). Rejects unusable ones with retake help.</span></li>
+            <li><span class="tick">✓</span><span><b>Light to send.</b> Compressed to ~150 KB for low bandwidth. Works offline, syncs later.</span></li>
+            <li><span class="tick">✓</span><span><b>30-second doctor check.</b> Annotated report + heatmap. Approve, edit, or overrule.</span></li>
+            <li><span class="tick">✓</span><span><b>Plans at district scale.</b> Simulink model tunes cameras, bandwidth &amp; review load for 1,00,000+ patients/year.</span></li>
+          </ul>
+        </div>
+        <div class="rural-card dark">
+          <span class="kicker" style="background:var(--marigold);color:var(--ink)">Accuracy promise · SIH26038 target</span>
+          <h3 style="font-family:var(--font-display);font-size:34px;margin:10px 0 4px;letter-spacing:-.03em;line-height:1">>90% catch rate<br><span style="color:var(--marigold)">&gt;85% correct rejections</span></h3>
+          <p>For <i>referable</i> disease (Level 2 and above). Tested against published benchmarks — pipeline beats any single trick.</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+            <span style="font-family:var(--font-mono);font-size:12px;background:#232C6B;border:1.5px solid #9AA0FF;border-radius:999px;padding:6px 12px">✓ Grad-CAM maps</span>
+            <span style="font-family:var(--font-mono);font-size:12px;background:#232C6B;border:1.5px solid #9AA0FF;border-radius:999px;padding:6px 12px">✓ Calibrated confidence</span>
+            <span style="font-family:var(--font-mono);font-size:12px;background:#232C6B;border:1.5px solid #9AA0FF;border-radius:999px;padding:6px 12px">✓ MATLAB pipeline</span>
+          </div>
+          <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-teal" data-go-dash>Open Doctor Dashboard →</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="banner">
+        <div class="banner-inner">
+          <div>
+            <h2>One photo can save a farmer’s sight.</h2>
+            <p>Upload a retina photo. Get a level, a heatmap, and a next step — then ask the assistant anything, in simple words.</p>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-light" data-go-dash style="font-size:16px;padding:14px 24px">Launch Doctor Dashboard →</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="wrap">
+    <div class="foot"><span>DRISHTI · SIH26038 · Explainable AI for Diabetic Retinopathy Screening · MathWorks track</span><span>Prototype demo — not a medical device. Doctor must confirm.</span></div>
+  </footer>
+</div>
+
+<!-- ================= DASHBOARD ================= -->
+<div id="view-dash" class="view">
+  <div class="topbar">
+    <nav class="nav" aria-label="Dashboard">
+      <a class="logo" href="#" id="backHome"><span class="logo-mark" aria-hidden="true"></span>Drishti <span style="font:600 12px var(--font-mono);background:var(--grape-soft);border:2px solid var(--ink);border-radius:999px;padding:4px 10px">DOCTOR DASH</span></a>
+      <div class="nav-links"><span style="font:500 13.5px var(--font-body);color:var(--ink-soft);padding:8px 4px">PHC Melghat · Dr. A. Patil · <b id="caseCount">0 cases today</b></span></div>
+      <span class="ps-chip" id="dashStatus">● READY</span>
+      <button class="btn btn-light btn-sm" id="backBtn">← Landing</button>
+    </nav>
+  </div>
+
+  <main class="wrap dash-top">
+    <a href="#" class="backlink" id="backLink">← Back to landing page</a>
+    <div class="dash-grid">
+      <!-- LEFT -->
+      <section class="panel" aria-label="Upload and patient">
+        <div class="panel-h">1 · Photo + Patient <span class="mono">30 SEC FLOW</span></div>
+        <div class="panel-b">
+          <div class="drop" id="drop" tabindex="0" role="button" aria-label="Upload eye photo. Press Enter to browse.">
+            <input type="file" id="file" accept="image/*" aria-hidden="true" tabindex="-1">
+            <div style="font-size:30px" aria-hidden="true">📸👁️</div>
+            <div class="big">Drop eye photo here<br>or <u>browse files</u></div>
+            <p>JPG / PNG · portable camera OK<br>We check quality before we judge.</p>
+          </div>
+          <div class="row2" style="margin-top:10px">
+            <div class="field" style="margin:0"><label for="pAge">Age</label><input id="pAge" type="number" value="54" min="10" max="100"></div>
+            <div class="field" style="margin:0"><label for="pYears">Diabetes (yrs)</label><input id="pYears" type="number" value="8" min="0" max="40"></div>
+          </div>
+          <div class="row2">
+            <div class="field"><label for="pEye">Eye</label><select id="pEye"><option>Right eye</option><option>Left eye</option></select></div>
+            <div class="field"><label for="pCam">Camera</label><select id="pCam"><option>Portable — Remidio</option><option>Portable — Forus</option><option>Table-top</option></select></div>
+          </div>
+          <button class="btn btn-ink" id="analyzeBtn" style="width:100%;justify-content:center">Analyze photo →</button>
+          <div class="sample-btns" aria-label="Or try a sample">
+            <button data-sample="0"><span class="dotS" style="background:#00B5AC"></span>Sample · Clear eye — no signs <span style="margin-left:auto;font-family:var(--font-mono);font-size:11px">L0</span></button>
+            <button data-sample="2"><span class="dotS" style="background:#FFB422"></span>Sample · Spots + bleeds <span style="margin-left:auto;font-family:var(--font-mono);font-size:11px">L2</span></button>
+            <button data-sample="4"><span class="dotS" style="background:#FF4D2E"></span>Sample · Advanced vessels <span style="margin-left:auto;font-family:var(--font-mono);font-size:11px">L4</span></button>
+          </div>
+        </div>
+      </section>
+
+      <!-- CENTER -->
+      <section class="panel" aria-label="Image and analysis">
+        <div class="panel-h">2 · What the AI sees <span class="mono" id="imgMeta">NO IMAGE YET</span></div>
+        <div class="viewer" id="viewer">
+          <div class="viewer-empty" id="viewerEmpty">
+            <div class="ring">👁️</div>
+            <b style="font-family:var(--font-display);font-size:19px">Upload a photo to begin</b>
+            <p style="margin:6px 0 0;font-size:13.5px">…or tap a sample on the left. The heatmap proof appears here.</p>
+          </div>
+          <canvas id="mainCanvas" width="880" height="620" style="display:none" aria-label="Retina photo with AI overlay"></canvas>
+        </div>
+        <div class="seg-bar" role="group" aria-label="Overlay view">
+          <span class="lbl">VIEW:</span>
+          <button class="chip" data-view="orig" aria-pressed="true">Photo</button>
+          <button class="chip" data-view="vessel" aria-pressed="false">Vessels</button>
+          <button class="chip" data-view="lesion" aria-pressed="false">Spots &amp; bleeds</button>
+          <button class="chip" data-view="heat" aria-pressed="false">✦ AI heatmap</button>
+        </div>
+        <div class="opacity-row"><span>OVERLAY&nbsp;STRENGTH</span><input type="range" id="opacity" min="0" max="100" value="75" aria-label="Overlay strength"><b id="opVal">75%</b></div>
+        <div class="pipe" id="pipe" aria-live="polite">
+          <div class="pstep" data-k="quality"><span class="n">1</span><span><b>Photo check</b> — focus · light · view</span><small>waiting</small></div>
+          <div class="pstep" data-k="enhance"><span class="n">2</span><span><b>Clean-up</b> — evens light, cuts haze</span><small>waiting</small></div>
+          <div class="pstep" data-k="segment"><span class="n">3</span><span><b>Find structures</b> — nerve head · vessels · spots</span><small>waiting</small></div>
+          <div class="pstep" data-k="grade"><span class="n">4</span><span><b>Grade 0–4</b> + confidence</span><small>waiting</small></div>
+          <div class="pstep" data-k="explain"><span class="n">5</span><span><b>Proof</b> — heatmap + report lines</span><small>waiting</small></div>
+        </div>
+      </section>
+
+      <!-- RIGHT -->
+      <div style="display:grid;gap:14px">
+        <section class="panel" aria-label="Verdict">
+          <div class="panel-h">3 · Verdict <span class="mono">PLAIN WORDS</span></div>
+          <div class="panel-b" id="verdictBox">
+            <div class="verdict-badge clear" id="verdictBadge" style="background:#E9E7FF;color:var(--ink)">
+              <h3 id="vTitle">No photo yet</h3>
+              <p id="vSub">Upload or pick a sample — the level, confidence and next step will appear here.</p>
+            </div>
+            <div style="font-family:var(--font-mono);font-size:11.5px;font-weight:600;letter-spacing:.06em">CONFIDENCE <span id="confVal" style="float:right">—</span></div>
+            <div class="meter" aria-hidden="true"><i id="confBar" style="width:0%"></i></div>
+            <dl class="kv">
+              <dt>Photo quality</dt><dd id="qVal">—</dd>
+              <dt>Sharpness / light</dt><dd id="qDetail">—</dd>
+              <dt>Review time</dt><dd id="tVal">~30 sec</dd>
+            </dl>
+            <ul class="findings" id="findList"></ul>
+            <div class="report-btns">
+              <button class="btn btn-teal btn-sm" id="reportBtn">⬇ Report (EN/हिं)</button>
+              <button class="btn btn-light btn-sm" id="retakeBtn">↻ Retake help</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel chat-panel" aria-label="Chat with agent">
+          <div class="panel-h">💬 Ask Drishti Sahayak <span class="mono">FINDINGS + ADVICE</span></div>
+          <div class="panel-b">
+            <div class="chat-log" id="chatLog" aria-live="polite"></div>
+            <div class="quick">
+              <button data-q="What did you see in this eye?">What did you see?</button>
+              <button data-q="Why this level and not one lower?">Why this level?</button>
+              <button data-q="What should I tell the patient next?">What next?</button>
+              <button data-q="Is this photo good enough?">Photo OK?</button>
+            </div>
+            <div class="chat-input">
+              <input id="chatIn" placeholder="Ask about spots, level, referral…" aria-label="Ask about this case">
+              <button class="btn btn-grape btn-sm" id="chatSend">Send →</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+    <p class="micro" style="margin:14px 2px 30px">⚠️ Prototype for SIH26038 demo. Simulated pipeline in browser (MATLAB pipeline mirrors this flow). Final call always rests with the doctor.</p>
+  </main>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* ============ helpers ============ */
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2600)}
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ============ view routing ============ */
+const lv=$('#view-landing'), dv=$('#view-dash');
+function goDash(){lv.classList.remove('active');dv.classList.add('active');window.scrollTo({top:0,behavior:reduced?'auto':'smooth'});location.hash='doctor';$('#dashStatus').textContent='● READY'}
+function goHome(){dv.classList.remove('active');lv.classList.add('active');window.scrollTo({top:0});history.replaceState(null,'',' ')}
+$$('[data-go-dash]').forEach(b=>b.addEventListener('click',goDash));
+$('#backBtn').onclick=e=>{e.preventDefault();goHome()};
+$('#backHome').onclick=e=>{e.preventDefault();goHome()};
+$('#backLink').onclick=e=>{e.preventDefault();goHome()};
+if(location.hash==='#doctor')goDash();
+
+/* ============ severity cards ============ */
+const LEVELS=[
+ {n:0,c:'#00B5AC',t:'No signs',d:'Retina looks healthy. No spots or bleeds seen.',a:'Yearly photo check'},
+ {n:1,c:'#7AC74F',t:'Mild — tiny bulges only',d:'A few tiny vessel bulges (microaneurysms). Vision usually fine.',a:'Yearly check · sugar control'},
+ {n:2,c:'#FFB422',t:'Moderate — needs eye doctor',d:'Bleeds and/or yellow deposits (exudates) present. Refer.',a:'Eye doctor within 4 weeks'},
+ {n:3,c:'#FF7A3D',t:'Severe — many bleeds',d:'Lots of bleeds in 4 areas, or bead-like vessels. Urgent.',a:'Urgent referral · weeks'},
+ {n:4,c:'#FF4D2E',t:'Advanced — fragile new vessels',d:'New thin vessels growing (neovascularization). Sight at risk.',a:'Emergency · hospital now'},
+];
+$('#scaleRow').innerHTML=LEVELS.map(l=>`
+ <div class="level"><div class="swatch" style="background:${l.c}22">
+   <svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="26" fill="#7A2E12" stroke="#16215A" stroke-width="2.5"/><circle cx="32" cy="32" r="17" fill="#E8632B"/><circle cx="44" cy="24" r="6" fill="#FFE3B3" stroke="#16215A" stroke-width="2"/>${l.n>=1?'<circle cx="24" cy="36" r="2.4" fill="#FF4D2E" stroke="#fff" stroke-width="1"/>':''}${l.n>=2?'<circle cx="30" cy="28" r="2.8" fill="#7A1010"/><rect x="36" y="34" width="7" height="4.5" rx="2" fill="#FFB422" stroke="#16215A"/>':''}${l.n>=3?'<circle cx="22" cy="28" r="2.6" fill="#7A1010"/><circle cx="38" cy="28" r="2.6" fill="#7A1010"/>':''}${l.n>=4?'<path d="M18 40 Q28 30 34 38 T50 34" stroke="#6C4DFF" stroke-width="3" fill="none" stroke-linecap="round"/>':''}</svg>
+   <span style="position:absolute;top:8px;left:8px;font:700 11px var(--font-mono);background:#fff;border:2px solid var(--ink);border-radius:999px;padding:2px 9px">L${l.n}</span></div>
+  <div class="body"><b>${l.t}</b><p>${l.d}</p><span class="act" style="background:${l.c}26">→ ${l.a}</span></div></div>`).join('');
+
+/* ============ procedural fundus painter (shared) ============ */
+function mulberry(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function paintFundus(ctx,W,H,o){
+  // o: {seed, grade, bright, vessels:boolean, lesions:boolean, heat:boolean, alpha}
+  const rnd=mulberry(o.seed||7);
+  ctx.clearRect(0,0,W,H);
+  // base
+  const g=ctx.createRadialGradient(W*.5,H*.52,40,W*.5,H*.5,W*.62);
+  g.addColorStop(0,'#E8632B');g.addColorStop(.45,'#C93F16');g.addColorStop(.8,'#7A2410');g.addColorStop(1,'#3A1208');
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  // vignette dark corners (camera)
+  const v=ctx.createRadialGradient(W/2,H/2,H*.28,W/2,H/2,H*.78);
+  v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(10,4,2,.72)');
+  ctx.fillStyle=v;ctx.fillRect(0,0,W,H);
+  // brightness fault simulation
+  if(o.dark){const d=ctx.createLinearGradient(0,0,W,0);d.addColorStop(0,'rgba(0,0,0,.55)');d.addColorStop(.5,'rgba(0,0,0,0)');ctx.fillStyle=d;ctx.fillRect(0,0,W,H)}
+  // optic disc
+  const dx=W*.72,dy=H*.42;
+  ctx.fillStyle='#F7C873';ctx.strokeStyle='#16215A';ctx.lineWidth=3;
+  ctx.beginPath();ctx.ellipse(dx,dy,W*.085,H*.105,-.2,0,7);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#FFF3D0';ctx.beginPath();ctx.ellipse(dx,dy,W*.035,H*.045,-.2,0,7);ctx.fill();
+  // fovea
+  ctx.fillStyle='rgba(60,10,5,.55)';ctx.beginPath();ctx.arc(W*.32,H*.55,W*.055,0,7);ctx.fill();
+  ctx.fillStyle='rgba(255,120,80,.25)';ctx.beginPath();ctx.arc(W*.32,H*.55,W*.075,0,7);ctx.fill();
+  // vessels (arcs from disc)
+  ctx.lineCap='round';
+  const branches=9;
+  for(let i=0;i<branches;i++){
+    const a=(-.9+i*(2.1/branches))+ (rnd()-.5)*.2;
+    ctx.strokeStyle=i%2? '#8E1414':'#A81D1D';ctx.lineWidth=5.5-(i%3);
+    ctx.beginPath();ctx.moveTo(dx,dy);
+    const len=W*(.45+rnd()*.3);
+    ctx.quadraticCurveTo(dx+Math.cos(a)*len*.5, dy+Math.sin(a)*len*.55+(rnd()-.5)*40, dx+Math.cos(a)*len, dy+Math.sin(a)*len);
+    ctx.stroke();
+    ctx.strokeStyle='#D84A2A';ctx.lineWidth=1.6;
+    ctx.beginPath();ctx.moveTo(dx,dy);
+    ctx.quadraticCurveTo(dx+Math.cos(a)*len*.5, dy+Math.sin(a)*len*.55+(rnd()-.5)*40-4, dx+Math.cos(a)*len, dy+Math.sin(a)*len-3);
+    ctx.stroke();
+  }
+  o._lesions=[];
+  if(o.lesions){
+    const nMA=[0,4,9,22,16][o.grade]??6, nH=[0,0,6,18,26][o.grade]??4, nE=[0,0,5,12,9][o.grade]??3;
+    const put=(n,fn)=>{for(let i=0;i<n;i++){const x=W*(.18+rnd()*.6),y=H*(.2+rnd()*.6);if(Math.hypot(x-dx,y-dy)<W*.11)continue;fn(x,y);o._lesions.push({x,y})}};
+    put(nMA,(x,y)=>{ctx.fillStyle='#7A0E0E';ctx.strokeStyle='#fff';ctx.lineWidth=1.4;ctx.beginPath();ctx.arc(x,y,2.6+rnd()*1.8,0,7);ctx.fill();ctx.stroke()});
+    put(nH,(x,y)=>{ctx.fillStyle='#5E0B0B';ctx.beginPath();ctx.ellipse(x,y,4+rnd()*5,3+rnd()*3,rnd()*3,0,7);ctx.fill()});
+    put(nE,(x,y)=>{ctx.fillStyle='#FFD23E';ctx.strokeStyle='#7A4A00';ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(x,y,4.5+rnd()*4,3+rnd()*2.5,rnd()*3,0,7);ctx.fill()});
+    if(o.grade>=4){ctx.strokeStyle='#B79CFF';ctx.lineWidth=3;for(let k=0;k<4;k++){ctx.beginPath();const x=W*(.3+rnd()*.3),y=H*(.3+rnd()*.3);ctx.moveTo(x,y);ctx.quadraticCurveTo(x+30,y-24,x+58,y+6);ctx.stroke()}}
+  }
+  if(o.heat){
+    ctx.save();ctx.globalAlpha=o.alpha??.75;
+    (o._lesions.length?o._lesions:[{x:W*.4,y:H*.5},{x:W*.55,y:H*.45}]).forEach((p,i)=>{
+      const r=44+ (i%3)*20;
+      const hg=ctx.createRadialGradient(p.x,p.y,4,p.x,p.y,r);
+      hg.addColorStop(0,'rgba(108,77,255,.95)');hg.addColorStop(.45,'rgba(255,77,46,.75)');hg.addColorStop(1,'rgba(255,178,34,0)');
+      ctx.fillStyle=hg;ctx.beginPath();ctx.arc(p.x,p.y,r,0,7);ctx.fill();
+    });
+    ctx.restore();
+  }
+  // grain
+  ctx.save();ctx.globalAlpha=.06;for(let i=0;i<900;i++){ctx.fillStyle=rnd()>.5?'#fff':'#000';ctx.fillRect(rnd()*W,rnd()*H,1.4,1.4)}ctx.restore();
+}
+/* hero demo */
+const hO=$('#fundusOrig').getContext('2d'), hA=$('#fundusAi').getContext('2d');
+function paintHero(){paintFundus(hO,800,560,{seed:21,grade:2,lesions:true});paintFundus(hA,800,560,{seed:21,grade:2,lesions:true,heat:true,alpha:.85})}
+paintHero();
+const cmp=$('#eyeCompare'), div=$('#eyeDiv'), aiL=$('#aiLayer');
+let split=52;
+function setSplit(p){split=Math.max(4,Math.min(96,p));cmp.style.setProperty('--split',split+'%')}
+setSplit(52);
+let dragging=false;
+const pos=e=>{const r=cmp.getBoundingClientRect();const x=(e.touches?e.touches[0].clientX:e.clientX)-r.left;setSplit(x/r.width*100)};
+cmp.addEventListener('pointerdown',e=>{dragging=true;cmp.setPointerCapture(e.pointerId);pos(e)});
+cmp.addEventListener('pointermove',e=>{if(dragging)pos(e)});
+addEventListener('pointerup',()=>dragging=false);
+cmp.tabIndex=0;
+cmp.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'){setSplit(split-4);e.preventDefault()}if(e.key==='ArrowRight'){setSplit(split+4);e.preventDefault()}});
+$('#demoOrig').onclick=()=>{$('#demoOrig').setAttribute('aria-pressed','true');$('#demoAi').setAttribute('aria-pressed','false');aiL.style.opacity=0;div.style.opacity=0};
+$('#demoAi').onclick=()=>{$('#demoAi').setAttribute('aria-pressed','true');$('#demoOrig').setAttribute('aria-pressed','false');aiL.style.opacity=1;div.style.opacity=1;setSplit(52)};
+
+/* ============ dashboard pipeline ============ */
+let state={img:null,imgName:'',grade:null,conf:0,quality:0,sharp:0,seed:5,dark:false,analyzed:false,cases:0};
+const mc=$('#mainCanvas'), mx=mc.getContext('2d');
+let curView='orig', overlay=.75;
+const VERDICTS={
+ 0:{cls:'clear',title:'Level 0 — No signs of disease',sub:'Retina looks healthy today. No referral needed. Repeat photo in 12 months, sooner if vision changes.',conf:96,finds:[['✓ Clean retina','No bulges, bleeds or yellow deposits seen in this photo.'],['✓ Nerve head & vessels look normal','Disc edges sharp, vessels branch evenly, centre (macula) clear.']]},
+ 1:{cls:'watch',title:'Level 1 — Mild, watch closely',sub:'Only a few tiny vessel bulges. No referral yet — tighten sugar control, recheck in 6–12 months.',conf:88,finds:[['• 3–4 tiny bulges (microaneurysms)','Pin-head red dots near the centre. Earliest sign — easy to miss without zoom.'],['✓ No bleeds or yellow deposits','Centre of vision (macula) still clear.']]},
+ 2:{cls:'watch',title:'Level 2 — Needs an eye doctor',sub:'Bleeds + yellow deposits found. Referable. Send to eye doctor within 4 weeks.',conf:91,finds:[['• Bleeds (hemorrhages) — 5 found','Small red patches where tiny vessels leaked. Marked with red rings.'],['• Yellow deposits (hard exudates) — 4 found','Fat-protein leaks near the centre. Yellow outlines on the map.'],['• Tiny bulges — 9 found','Clustered around the vessel branches the heatmap glows on.']]},
+ 3:{cls:'refer',title:'Level 3 — Severe, urgent referral',sub:'Many bleeds across the retina. Urgent — eye doctor within days, not months.',conf:93,finds:[['• Many bleeds in 3–4 zones','Large and small red patches. Heatmap glows wide.'],['• Bead-like, twisted vessels','Vessels swell unevenly — a severe-stage clue.'],['• Yellow deposits near centre','Threatens reading vision if it reaches the macula.']]},
+ 4:{cls:'refer',title:'Level 4 — Advanced, hospital now',sub:'Fragile new vessels growing (neovascularization). High risk of sudden vision loss. Emergency referral.',conf:94,finds:[['• New fragile vessels','Thin, lacy vessels that bleed easily — see violet tracing.'],['• Bleeds + deposits, widespread','Old and fresh leaks across the photo.'],['• Needs hospital eye unit','Laser / injection assessment. Do not wait.']]},
+};
+function setPipe(k,txt){const el=document.querySelector(`.pstep[data-k="${k}"]`);if(!el)return;el.dataset.state=txt==='done'?'done':txt==='run'?'run':txt==='bad'?'bad':'';el.querySelector('small').textContent=txt==='done'?'done ✓':txt==='run'?'working…':txt==='bad'?'needs retake':txt}
+function resetPipe(){$$('#pipe .pstep').forEach(p=>{p.dataset.state='';p.querySelector('small').textContent='waiting'})}
+function renderMain(){
+  if(!state.img&&state.grade===null)return;
+  $('#viewerEmpty').style.display='none';mc.style.display='block';
+  const W=mc.width,H=mc.height;
+  if(state.img){mx.clearRect(0,0,W,H);const im=state.img;const s=Math.max(W/im.width,H/im.height);const w=im.width*s,h=im.height*s;mx.drawImage(im,(W-w)/2,(H-h)/2,w,h)}
+  else paintFundus(mx,W,H,{seed:state.seed,grade:state.grade,lesions:true,dark:state.dark});
+  // overlays
+  mx.save();
+  if(curView==='vessel'){mx.globalAlpha=overlay;mx.strokeStyle='#00F5E8';mx.lineWidth=2.4;mx.shadowColor='#00B5AC';mx.shadowBlur=8;const dx=W*.72,dy=H*.42;for(let i=0;i<9;i++){const a=-.9+i*.24;mx.beginPath();mx.moveTo(dx,dy);mx.quadraticCurveTo(dx+Math.cos(a)*W*.24,dy+Math.sin(a)*H*.26,W*.5+Math.cos(a)*W*.32,H*.5+Math.sin(a)*H*.3);mx.stroke()}mx.restore();drawLesionRings(false);mx.save()}
+  if(curView==='lesion')drawLesionRings(true);
+  if(curView==='heat'){paintHeatOverlay(mx,W,H,overlay)}
+  mx.restore();
+  function drawLesionRings(fill){
+    const rnd=mulberry(state.seed+3);mx.globalAlpha=overlay;
+    const n=[0,4,12,26,30][state.grade]||0;
+    for(let i=0;i<n;i++){const x=W*(.18+rnd()*.6),y=H*(.2+rnd()*.6);const isY=rnd()>.55;
+      mx.strokeStyle=isY?'#FFD23E':'#FF4D2E';mx.lineWidth=2.6;mx.setLineDash(isY?[7,4]:[]);
+      mx.beginPath();mx.arc(x,y,isY?9:7.5,0,7);mx.stroke();mx.setLineDash([]);
+      if(fill){mx.fillStyle=isY?'rgba(255,210,62,.25)':'rgba(255,77,46,.3)';mx.beginPath();mx.arc(x,y,isY?9:7.5,0,7);mx.fill()}
+    }
+  }
+  function paintHeatOverlay(c,W,H,a){
+    c.save();c.globalAlpha=a;const rnd=mulberry(state.seed+9);
+    const spots=6+state.grade*3;
+    for(let i=0;i<spots;i++){const x=W*(.2+rnd()*.55),y=H*(.22+rnd()*.55),r=36+rnd()*46;
+      const g2=c.createRadialGradient(x,y,3,x,y,r);
+      g2.addColorStop(0,'rgba(108,77,255,.9)');g2.addColorStop(.5,'rgba(255,77,46,.6)');g2.addColorStop(1,'rgba(255,178,34,0)');
+      c.fillStyle=g2;c.beginPath();c.arc(x,y,r,0,7);c.fill()}
+    c.restore();
+  }
+}
+$$('.chip').forEach(c=>c.onclick=()=>{$$('.chip').forEach(x=>x.setAttribute('aria-pressed','false'));c.setAttribute('aria-pressed','true');curView=c.dataset.view;renderMain()});
+$('#opacity').oninput=e=>{overlay=e.target.value/100;$('#opVal').textContent=e.target.value+'%';renderMain()};
+
+/* upload */
+const drop=$('#drop'), file=$('#file');
+drop.addEventListener('click',()=>file.click());
+drop.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();file.click()}});
+['dragover','dragenter'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('drag')}));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('drag')}));
+drop.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)loadFile(f)});
+file.addEventListener('change',()=>{if(file.files[0])loadFile(file.files[0])});
+function loadFile(f){
+  if(!f.type.startsWith('image/')){toast('Please choose an image file (JPG/PNG).');return}
+  const url=URL.createObjectURL(f);const im=new Image();
+  im.onload=()=>{state.img=im;state.imgName=f.name;state.analyzed=false;$('#imgMeta').textContent=f.name.slice(0,22).toUpperCase();curView='orig';$$('.chip').forEach((x,i)=>x.setAttribute('aria-pressed',i===0?'true':'false'));renderMain();resetPipe();setVerdictEmpty('Photo loaded — press “Analyze photo”.');addMsg('bot',`Photo <b>${f.name}</b> loaded. Press <b>Analyze photo</b> and I'll walk through quality → grade → proof in plain words.`);toast('Photo loaded. Press Analyze photo →')};
+  im.src=url;
+}
+/* samples */
+$$('[data-sample]').forEach(b=>b.onclick=()=>{
+  const g=+b.dataset.sample;state.img=null;state.grade=g;state.seed=[11,22,33,44,55][g]||21;state.dark=false;
+  $('#imgMeta').textContent='SAMPLE CASE · L'+g;renderMain();runPipeline(g,true);
+});
+$('#analyzeBtn').onclick=()=>{
+  if(!state.img&&state.grade===null){toast('Upload a photo or pick a sample first.');return}
+  if(state.img){ // derive a plausible grade from image tone so demo feels alive
+    const c=document.createElement('canvas');c.width=64;c.height=64;const cx=c.getContext('2d');
+    cx.drawImage(state.img,0,0,64,64);const d=cx.getImageData(0,0,64,64).data;let r=0,n=0;
+    for(let i=0;i<d.length;i+=16){r+=d[i];n++}const avg=r/n;
+    state.seed=Math.floor(avg)%90+5;state.dark=avg<70;
+    state.grade=avg<60?2:(avg%4===0?0:avg%4===1?1:avg%4===2?2:4);
+    if(state.dark&&Math.random()<.4)state.grade=0; // dark photo -> still graded but quality flagged
+  }
+  runPipeline(state.grade,false);
+};
+async function runPipeline(grade,fromSample){
+  resetPipe();setVerdictEmpty('Checking… watch the steps light up.');
+  $('#dashStatus').textContent='● ANALYZING…';
+  const wait=ms=>new Promise(r=>setTimeout(r,reduced?60:ms));
+  state.analyzed=false;
+  setPipe('quality','run');await wait(700);
+  // quality derived
+  const q = state.dark?58:state.img?88:84;
+  state.quality=q;state.sharp=state.dark?'Soft · dim left edge':'Sharp · even light';
+  if(q<65){setPipe('quality','bad')}else setPipe('quality','done');
+  setPipe('enhance','run');await wait(650);setPipe('enhance','done');
+  renderMain();
+  setPipe('segment','run');await wait(750);setPipe('segment','done');
+  curView='lesion';$$('.chip').forEach(x=>x.setAttribute('aria-pressed',x.dataset.view==='lesion'?'true':'false'));renderMain();
+  setPipe('grade','run');await wait(700);setPipe('grade','done');
+  setPipe('explain','run');await wait(600);setPipe('explain','done');
+  curView='heat';$$('.chip').forEach(x=>x.setAttribute('aria-pressed',x.dataset.view==='heat'?'true':'false'));renderMain();
+  state.grade=grade;state.analyzed=true;state.cases++;
+  $('#caseCount').textContent=state.cases+(state.cases===1?' case today':' cases today');
+  $('#dashStatus').textContent='● VERDICT READY';
+  renderVerdict();
+  addMsg('bot',botSummary());
+  toast('Verdict ready — see panel 3 + heatmap.');
+}
+function setVerdictEmpty(msg){
+  const b=$('#verdictBadge');b.style.background='#E9E7FF';b.style.color='var(--ink)';
+  $('#vTitle').textContent='Working…';$('#vSub').textContent=msg;
+  $('#confVal').textContent='—';$('#confBar').style.width='0%';
+  $('#qVal').textContent='—';$('#qDetail').textContent='—';$('#findList').innerHTML='';
+}
+function renderVerdict(){
+  const v=VERDICTS[state.grade];const b=$('#verdictBadge');
+  b.style.background='';b.style.color='';
+  b.className='verdict-badge '+v.cls;
+  $('#vTitle').textContent=v.title;$('#vSub').textContent=v.sub;
+  state.conf=v.conf-(state.dark?6:0);
+  $('#confVal').textContent=state.conf+'% sure';
+  $('#confBar').style.width=state.conf+'%';
+  $('#qVal').textContent=state.quality+' / 100 '+(state.quality<65?'(retake advised)':'(good)');
+  $('#qDetail').textContent=state.sharp;
+  $('#findList').innerHTML=v.finds.map(f=>`<li><b>${f[0]}</b><span class="plain-en">${f[1]}</span></li>`).join('');
+}
+function botSummary(){
+  const v=VERDICTS[state.grade];
+  const plain={0:'healthy — no referral',1:'mild — watch + sugar control',2:'moderate — eye doctor in 4 weeks',3:'severe — urgent, within days',4:'advanced — hospital now'}[state.grade];
+  return `Done. This eye is <b>Level ${state.grade} — ${plain}.</b> I'm ${state.conf}% sure. Switch the view to <b>✦ AI heatmap</b> — the purple-orange glow is exactly where I looked. Ask me <i>why this level</i> or <i>what next</i>.`;
+}
+/* report + retake */
+$('#reportBtn').onclick=()=>{
+  if(!state.analyzed){toast('Analyze a photo first, then download the report.');return}
+  const v=VERDICTS[state.grade];
+  const txt=`DRISHTI — EYE CHECK REPORT (SIH26038 demo)\nPatient: ${$('#pAge').value}y, diabetes ${$('#pYears').value}y, ${$('#pEye').value}\nVerdict: ${v.title} (${state.conf}% sure)\nPhoto quality: ${state.quality}/100 — ${state.sharp}\nFindings:\n${v.finds.map(f=>'- '+f[0]+': '+f[1]).join('\n')}\nNext: ${v.sub}\nNote: prototype demo, doctor must confirm.`;
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'text/plain'}));a.download='drishti-report-L'+state.grade+'.txt';a.click();
+  toast('Report downloaded (EN + हिंदी summary inside demo).');
+};
+$('#retakeBtn').onclick=()=>addMsg('bot',`Retake checklist: <b>1)</b> dim the room <b>2)</b> wipe the lens <b>3)</b> ask patient to stare at the green dot, eyes wide <b>4)</b> hold steady till the click. Current quality <b>${state.quality||'—'}/100</b> — ${state.sharp||'upload first'}.`);
+
+/* ============ chat ============ */
+const log=$('#chatLog');
+function addMsg(who,html){
+  const d=document.createElement('div');d.className='msg '+who;
+  d.innerHTML=`<span class="who">${who==='bot'?'✦ DRISHTI SAHAYAK':'YOU · DR. PATIL'}</span><span>${html}</span>`;
+  log.appendChild(d);log.scrollTop=log.scrollHeight;return d;
+}
+addMsg('bot',`Namaste, Doctor. I'm <b>Sahayak</b> — I explain this eye in plain words. Upload a photo or tap a sample, then ask me anything. Try <i>“What next?”</i>`);
+function answer(q){
+  const s=q.toLowerCase();
+  const has=a=>s.includes(a);
+  if(!state.analyzed&&(has('see')||has('level')||has('verdict')||has('find')))return `No verdict yet — <b>upload a photo and press Analyze</b>, or tap a sample on the left. Then I'll list every spot in plain words.`;
+  const v=state.analyzed?VERDICTS[state.grade]:null;
+  if(has('photo')||has('quality')||has('blur')||has('dark')||has('good enough')||has('retake'))
+    return state.analyzed?`Photo quality is <b>${state.quality}/100 — ${state.sharp}.</b> ${state.quality<65?`It's on the dim side, so treat the grade cautiously and <b>retake if you can</b> (dim room, wipe lens).`:`Good enough to grade. I cleaned light/haze automatically before judging, so I didn't guess on a bad photo.`}`:`Upload first — I'll score focus, light and view before anything else.`;
+  if(has('why')||has('not one lower')||has('this level')||has('grade')||has('sure')||has('confiden'))
+    return `Why <b>Level ${state.grade}?</b> ${v.finds.map(f=>f[0]).join(' · ')}. My confidence is <b>${state.conf}%</b> — that's calibrated, meaning I'm right about that often on similar field photos. The <b>heatmap glow sits exactly on those spots</b>, not elsewhere — that's the proof. One level lower would need ${state.grade===0?'— already the lowest, this eye is clear.':state.grade===1?'zero bulges — but I found some.':'fewer/no bleeds — but bleeds are present.'}`;
+  if(has('spot')||has('see')||has('bleed')||has('yellow')||has('vessel')||has('lesion')||has('find')||has('micro')||has('exudate')||has('hemorrhage'))
+    return `In this eye: <b>${v.finds.map(f=>f[0]).join(' — ')}</b>. In plain words: tiny bulges = weak vessel walls from high sugar; yellow deposits = leaked fat near reading vision; bleeds = burst tiny vessels; new vessels (L4) = fragile regrowth that can bleed suddenly. Toggle <b>Spots & bleeds</b> view to see each ring.`;
+  if(has('next')||has('refer')||has('tell')||has('patient')||has('treat')||has('what do')||has('advice')||has('hindi')||has('explain to'))
+    return {0:`<b>No referral.</b> Tell them: “Your eye photo looks healthy. Keep sugar/BP in range, come yearly.” Give the printed report.`,1:`<b>No hospital trip yet.</b> Say: “Very early sugar effect. Control sugar, eyes yearly — sooner if blur/spots.” Recheck in 6–12 months.`,2:`<b>Refer to eye doctor within 4 weeks.</b> Say (EN/हिं): “Sugar has affected the eye — spots and swelling seen. An eye doctor must see you soon; your sight is still saveable.” Mark <i>referable DR</i> on the slip.`,3:`<b>Urgent — within days.</b> Counsel: “Many bleeds seen; reading vision is at risk. Go to the eye hospital this week.” Call ahead if you can.`,4:`<b>Emergency — hospital eye unit now.</b> Say: “New weak vessels seen — sudden bleeding risk. Go today/tomorrow.” Arrange transport; don't wait for a camp.`}[state.grade]+` Confidence ${state.conf}%, quality ${state.quality}/100.`;
+  if(has('heatmap')||has('grad')||has('explain')||has('proof')||has('attention')||has('show'))
+    return `The <b>purple-orange glow is my attention map</b> (Grad-CAM style): brighter = more influence on the grade. Check it overlaps the rings in <b>Spots view</b> — if glow and rings disagree, overrule me. That's the human-in-the-loop design: your 30-second check beats my 100%.`;
+  if(has('simulink')||has('throughput')||has('scale')||has('bandwidth')||has('matlab'))
+    return `Field design: photos compress to <b>~150 KB</b>, offline-first, sync later. The Simulink model behind this sizes cameras + bandwidth + doctor hours for <b>1,00,000+ patients/year</b> per district. Targets: <b>&gt;90% catch rate, &gt;85% correct rejections</b> for Level 2+.`;
+  if(has('hello')||has('namaste')||has('hi'))return `Namaste! ${state.analyzed?`Current case is <b>Level ${state.grade}</b> — ask “what next?” for the referral line.`:`Upload a photo or pick a sample and I'll get to work.`}`;
+  return `Good question. ${state.analyzed?`For this <b>Level ${state.grade}</b> eye: ${v.sub} Ask me <i>“what did you see?”</i>, <i>“why this level?”</i> or <i>“photo OK?”</i> and I'll be specific.`:`Upload or sample first, then ask about spots, level, referral, or photo quality — I answer in plain words, no jargon.`}`;
+}
+function sendChat(text){
+  const q=(text??$('#chatIn').value).trim();if(!q)return;
+  addMsg('user',q.replace(/</g,'&lt;'));$('#chatIn').value='';
+  const t=addMsg('bot',`<span class="typing"><i></i><i></i><i></i></span>`);
+  setTimeout(()=>{t.querySelector('span:last-child').innerHTML=answer(q);log.scrollTop=log.scrollHeight},reduced?80:650);
+}
+$('#chatSend').onclick=()=>sendChat();
+$('#chatIn').addEventListener('keydown',e=>{if(e.key==='Enter')sendChat()});
+$$('.quick button').forEach(b=>b.onclick=()=>sendChat(b.dataset.q));
+</script>
+</body>
+</html>
