@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { paintFundus } from '../lib/fundus.js';
+import seerLogo from '../assets/seer-logo.png';
 
 export const LEVELS = [
   { n: 0, c: '#0e9f8a', t: 'No signs', d: 'Retina looks healthy. No spots or bleeds seen in this photo.', a: 'Yearly photo check' },
@@ -14,7 +15,7 @@ export function AppBar() {
   return (
     <div className="appbar">
       <div className="wrap appbar-in">
-        <Link className="brand" to="/"><span className="brand-mark">◉</span>Drishti</Link>
+        <Link className="brand" to="/"><span className="brand-mark">◉</span>SEER</Link>
         <nav className="nav-links" aria-label="Main">
           <a href="#how">How it checks</a>
           <a href="#levels">Levels 0–4</a>
@@ -105,13 +106,15 @@ export default function Landing() {
           <div>
             <span className="eyebrow">For PHCs · Portable-camera ready · English + हिन्दी</span>
             <h1 className="hero-title">Diabetes can steal sight before you feel it. We catch it early.</h1>
-            <p className="lead"><strong>Drishti</strong> checks a photo of the back of the eye and <strong>shows its work</strong> — what it saw, where, and how sure it is. <strong>No jargon. 30-second verdict.</strong></p>
+            <p className="lead"><strong>SEER</strong> checks a photo of the back of the eye and <strong>shows its work</strong> — what it saw, where, and how sure it is. <strong>No jargon. 30-second verdict.</strong></p>
             <div className="hero-cta">
               <Link className="btn btn-primary" to="/login">Open Doctor Dashboard →</Link>
               <a className="btn btn-outline" href="#how">See how it checks</a>
             </div>
           </div>
-          <EyeCompare />
+          <div className="hero-logo-wrap">
+            <img src={seerLogo} alt="SEER — AI-Powered Retinal Screening" className="hero-logo" />
+          </div>
         </div>
         <dl className="statstrip">
           <div><dt>77M+</dt><dd>adults with diabetes in India</dd></div>
@@ -123,7 +126,7 @@ export default function Landing() {
 
       <main className="wrap">
         <section className="section" id="how">
-          <div className="sec-head"><span className="kicker">How Drishti checks</span>
+          <div className="sec-head"><span className="kicker">How SEER checks</span>
             <h2>Not a black box. A careful assistant.</h2></div>
           <ol className="flow3">
             <li><span className="fnum">01</span><div><b>Is this photo checkable?</b><p>Focus, light, view — scored first. Blurry means retake help, never a guess.</p></div></li>
@@ -166,7 +169,7 @@ export default function Landing() {
           </div>
         </div>
       </main>
-      <footer className="wrap foot"><div className="foot-in"><span>DRISHTI · SIH26038 · Explainable AI for Diabetic Retinopathy Screening</span><span>Prototype demo — not a medical device. Doctor must confirm.</span></div></footer>
+      <footer className="wrap foot"><div className="foot-in"><span>SEER · SIH26038 · Explainable AI for Diabetic Retinopathy Screening</span><span>Prototype demo — not a medical device. Doctor must confirm.</span></div></footer>
     </>
   );
 }

@@ -15,7 +15,7 @@ export default function Login() {
     <div className="auth-wrap">
       <div className="auth-grid">
         <div className="auth-side">
-          <Link className="brand" to="/"><span className="brand-mark">◉</span>Drishti</Link>
+          <Link className="brand" to="/"><span className="brand-mark">◉</span>SEER</Link>
           <h1>Screen a village<br />before lunch.</h1>
           <p>Sign in to the PHC workspace — queue, screening, referrals and reports in one calm place. Demo build: any name works, nothing leaves this browser except /api calls.</p>
           <ul>

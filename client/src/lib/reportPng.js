@@ -97,7 +97,7 @@ export async function buildReportPng(c, img, session = {}) {
   ctx.fillStyle = INK; ctx.fillRect(0, 0, W, 190);
   ctx.fillStyle = '#fff'; ctx.textAlign = 'left';
   ctx.font = "800 40px Sora, Inter, sans-serif";
-  ctx.fillText('◉  Drishti', M, 78);
+  ctx.fillText('◉  SEER', M, 78);
   ctx.font = "500 24px Inter, sans-serif"; ctx.fillStyle = '#aebdcc';
   ctx.fillText(session.phc || 'Rural Eye Screening · SIH26038', M, 122);
   ctx.fillStyle = '#fff'; ctx.font = "700 34px Sora, Inter, sans-serif"; ctx.textAlign = 'right';
@@ -202,7 +202,7 @@ export async function buildReportPng(c, img, session = {}) {
   ctx.fillStyle = MUTED; ctx.font = '500 20px Inter, sans-serif';
   ctx.fillText('Prototype screening aid for SIH26038 — final diagnosis rests with the ophthalmologist.', M, H - 78);
   ctx.textAlign = 'right'; ctx.font = "500 20px 'IBM Plex Mono', monospace";
-  ctx.fillText('drishti · sih26038', W - M, H - 78);
+  ctx.fillText('seer · sih26038', W - M, H - 78);
   ctx.textAlign = 'left';
 
   return cv.toDataURL('image/png');

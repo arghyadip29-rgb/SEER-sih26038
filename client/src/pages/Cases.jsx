@@ -52,7 +52,7 @@ export function CaseDetail() {
     try {
       const s = getSession() || {};
       const url = await buildReportPng(c, c.thumbnail, s);
-      downloadPng(url, `Drishti-${c.id}-report.png`);
+      downloadPng(url, `SEER-${c.id}-report.png`);
     } finally { setPngBusy(false); }
   };
   const sendCorrection = async () => {

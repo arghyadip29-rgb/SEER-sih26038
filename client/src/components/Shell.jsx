@@ -20,7 +20,7 @@ export default function Shell() {
     return (
       <div className="wrap" style={{ padding: '60px 20px', maxWidth: 520 }}>
         <div className="card"><div className="card-b" style={{ textAlign: 'center' }}>
-          <div className="brand" style={{ justifyContent: 'center' }}><span className="brand-mark">◉</span>Drishti</div>
+          <div className="brand" style={{ justifyContent: 'center' }}><span className="brand-mark">◉</span>SEER</div>
           <p className="muted" style={{ margin: '12px 0 16px' }}>Doctor sign-in required for the screening workspace.</p>
           <Link className="btn btn-primary" to="/login">Go to sign in →</Link>
         </div></div>
@@ -30,7 +30,7 @@ export default function Shell() {
   return (
     <div className="shell">
       <aside className="side" aria-label="Workspace">
-        <Link className="brand" to="/"><span className="brand-mark">◉</span>Drishti</Link>
+        <Link className="brand" to="/"><span className="brand-mark">◉</span>SEER</Link>
         <div className="side-phc">{session.phc}<span>{session.doctor}</span></div>
         <nav className="side-nav">
           {NAV.map((n) => (

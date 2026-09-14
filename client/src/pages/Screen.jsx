@@ -222,7 +222,7 @@ export default function Screen() {
                     imgRef.current || canvasRef.current,
                     s
                   );
-                  downloadPng(url, `Drishti-${savedId || 'draft'}-report.png`);
+                  downloadPng(url, `SEER-${savedId || 'draft'}-report.png`);
                   say('PNG report downloaded.');
                 }}>⬇ PNG report</button>
                 {savedId && <Link className="btn btn-outline btn-sm" to={`/app/cases/${savedId}`}>Open {savedId} →</Link>}

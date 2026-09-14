@@ -67,9 +67,9 @@ export async function askChat(question, context) {
 export async function downloadReport(payload) {
   try {
     const txt = await tryFetch('/api/report', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-    triggerDownload(typeof txt === 'string' ? txt : JSON.stringify(txt), `drishti-report-L${payload.grade}.txt`);
+    triggerDownload(typeof txt === 'string' ? txt : JSON.stringify(txt), `seer-report-L${payload.grade}.txt`);
   } catch {
-    triggerDownload(`DRISHTI REPORT (offline draft)\nVerdict: Level ${payload.grade}\nNote: start server for full report.`, `drishti-report-L${payload.grade}.txt`);
+    triggerDownload(`SEER REPORT (offline draft)\nVerdict: Level ${payload.grade}\nNote: start server for full report.`, `seer-report-L${payload.grade}.txt`);
   }
 }
 
