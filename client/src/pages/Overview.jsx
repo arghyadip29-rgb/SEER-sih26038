@@ -16,8 +16,8 @@ export default function Overview() {
       </div>
       <div className="kpi-grid">
         <div className="kpi"><span className="tag">SCREENED TODAY</span><b>{today}</b><small>across both eyes camps</small></div>
-        <div className="kpi warn"><span className="tag">NEEDS EYE DOCTOR (L2+)</span><b>{ref}</b><small>referral slips pending</small></div>
-        <div className="kpi bad"><span className="tag">URGENT (L4)</span><b>{urg}</b><small>hospital today, not next week</small></div>
+        <div className="kpi warn"><span className="tag">REFERABLE (GRADE 2+)</span><b>{ref}</b><small>referral slips pending</small></div>
+        <div className="kpi bad"><span className="tag">URGENT (GRADE 4)</span><b>{urg}</b><small>hospital today, not next week</small></div>
         <div className="kpi ok"><span className="tag">WAITING REVIEW</span><b>{q}</b><small>mild cases to confirm</small></div>
       </div>
       <div className="two-col">
@@ -25,7 +25,7 @@ export default function Overview() {
           <div className="rows">
             {cases.filter((c) => c.grade >= 2).slice(0, 4).map((c) => (
               <Link key={c.id} className="row" to={`/app/cases/${c.id}`}>
-                <span className={`pill l${c.grade}`}>L{c.grade}</span>
+                <span className={`pill l${c.grade}`}>G{c.grade}</span>
                 <span className="row-main"><b>{c.patient}</b><small>{c.id} · {c.eye} · {c.confidence}% sure</small></span>
                 <span className={`status ${c.status}`}>{STATUS_LABEL[c.status]}</span>
               </Link>

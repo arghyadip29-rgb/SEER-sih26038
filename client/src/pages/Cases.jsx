@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { getCases, getSession, saveCase, STATUS_LABEL } from '../lib/store.js';
 import { downloadReport, submitCorrection } from '../lib/api.js';
 import { buildReportPng, downloadPng } from '../lib/reportPng.js';
+import { gradeInfo } from '../lib/icdr.js';
 
 const TABS = ['all', 'queued', 'referred', 'urgent', 'cleared'];
 
@@ -26,7 +27,7 @@ export function Cases() {
       <section className="card"><div className="rows">
         {list.map((c) => (
           <Link key={c.id} className="row" to={`/app/cases/${c.id}`}>
-            <span className={`pill l${c.grade}`}>L{c.grade}</span>
+            <span className={`pill l${c.grade}`}>G{c.grade}</span>
             <span className="row-main"><b>{c.patient}</b><small>{c.id} · {c.age}y · {c.eye} · {new Date(c.createdAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}</small></span>
             <span className="mono muted">{c.confidence}%</span>
             <span className={`status ${c.status}`}>{STATUS_LABEL[c.status]}</span>
@@ -45,6 +46,7 @@ export function CaseDetail() {
   const [corr, setCorr] = useState({ grade: c?.grade ?? 2, reason: '' });
   const [corrMsg, setCorrMsg] = useState('');
   if (!c) return <div className="page"><p>Case not found. <Link to="/app/cases">Back to queue →</Link></p></div>;
+  const gi = gradeInfo(c.grade);
   const setStatus = (status) => { saveCase({ ...c, status, validatedBy: getSession()?.doctor || c.validatedBy, validatedAt: Date.now() }); location.reload(); };
   const [pngBusy, setPngBusy] = useState(false);
   const pngReport = async () => {
@@ -59,7 +61,7 @@ export function CaseDetail() {
     try {
       await submitCorrection({ aid: c.aid || null, caseId: c.id, correctedGrade: Number(corr.grade), reason: corr.reason, doctor: getSession()?.doctor || '' });
       saveCase({ ...c, correctedGrade: Number(corr.grade), status: 'queued' });
-      setCorrMsg(`Correction logged: L${corr.grade}. It now trains the memory layer.`);
+      setCorrMsg(`Correction logged: Grade ${corr.grade}. It now trains the memory layer.`);
     } catch { setCorrMsg('Server unreachable — correction kept locally only.'); saveCase({ ...c, correctedGrade: Number(corr.grade) }); }
     setTimeout(() => setCorrMsg(''), 3200);
   };
@@ -71,11 +73,11 @@ export function CaseDetail() {
         <span className={`status ${c.status} big`}>{STATUS_LABEL[c.status]}</span>
       </div>
       <div className="two-col">
-        <section className="card"><div className="card-h"><b>Verdict · Level {c.grade}</b><span className="mono">{c.sharpness}</span></div>
+        <section className="card"><div className="card-h"><b>Verdict · {gi.label}</b><span className="mono">{c.sharpness}</span></div>
           <div className="card-b">
             <div className={`verdict ${c.grade >= 3 ? 'refer' : c.grade === 0 ? 'clear' : 'watch'}`}>
-              <h3>{c.grade === 0 ? 'No signs — no referral' : c.grade === 1 ? 'Mild — watch, no referral yet' : c.grade <= 3 ? `Level ${c.grade} — refer to eye doctor` : 'Advanced — hospital now'}</h3>
-              <p>{c.grade >= 4 ? 'Emergency: hospital eye unit today. New fragile vessels risk sudden bleed.' : c.grade >= 2 ? 'Referable: eye doctor within 4 weeks (days if vision drops).' : c.grade === 1 ? 'Early sugar effect. Control sugar, recheck 6–12 months.' : 'Healthy today. Yearly photo check.'}</p>
+              <h3>{gi.label} — {gi.title}</h3>
+              <p>{gi.action}</p>
             </div>
             <div className="field"><label>Doctor note (saved with case)</label><input value={note} onChange={(e) => setNote(e.target.value)} placeholder="e.g. Counselled, slip given, review 4 wks" /></div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -100,10 +102,10 @@ export function CaseDetail() {
             <div className="row2">
               <div className="field" style={{ margin: 0 }}><label>Correct grade</label>
                 <select value={corr.grade} onChange={(e) => setCorr({ ...corr, grade: e.target.value })}>
-                  {[0, 1, 2, 3, 4].map((g) => <option key={g} value={g}>Level {g}</option>)}
+                  {[0, 1, 2, 3, 4].map((g) => <option key={g} value={g}>{gradeInfo(g).label} — {gradeInfo(g).short}</option>)}
                 </select>
               </div>
-              <div className="field" style={{ margin: 0 }}><label>Reason</label><input value={corr.reason} onChange={(e) => setCorr({ ...corr, reason: e.target.value })} placeholder="e.g. artefact, not bleed" /></div>
+              <div className="field" style={{ margin: 0 }}><label>Reason</label><input value={corr.reason} onChange={(e) => setCorr({ ...corr, reason: e.target.value })} placeholder="e.g. retinal artefact, not hemorrhage" /></div>
             </div>
             <div style={{ display: 'flex', gap: 8, marginTop: 8, alignItems: 'center', flexWrap: 'wrap' }}>
               <button className="btn btn-outline btn-sm" onClick={sendCorrection}>Log correction</button>

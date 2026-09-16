@@ -3,14 +3,14 @@ import { useSearchParams } from 'react-router-dom';
 import { askChat } from '../lib/api.js';
 import { getCases } from '../lib/store.js';
 
-const SUGGEST = ['What did you see in this eye?', 'Why this level?', 'What should I tell the patient?', 'Is the photo good enough?', 'Explain the heatmap.'];
+const SUGGEST = ['What did you see in this eye?', 'Why this grade?', 'What should I tell the patient?', 'Is the photo gradable?', 'Explain the attention map.'];
 
 export default function Assistant() {
   const [sp] = useSearchParams();
   const cases = getCases();
   const [caseId, setCaseId] = useState(sp.get('case') || (cases[0]?.id ?? ''));
   const active = cases.find((c) => c.id === caseId) || null;
-  const [msgs, setMsgs] = useState([{ who: 'bot', html: active ? `Context set to <b>${active.id}</b> (${active.patient}, Level ${active.grade}). Ask anything — I answer in plain words.` : 'Pick a case for context, then ask. Without context I answer generally.' }]);
+  const [msgs, setMsgs] = useState([{ who: 'bot', html: active ? `Context set to <b>${active.id}</b> (${active.patient}, Grade ${active.grade}). Ask anything — I answer in clear clinical words.` : 'Pick a case for context, then ask. Without context I answer generally.' }]);
   const [q, setQ] = useState('');
   const [busy, setBusy] = useState(false);
   const logRef = useRef(null);
@@ -30,16 +30,16 @@ export default function Assistant() {
       <div className="two-col assist">
         <section className="card"><div className="card-h"><b>Context</b><span className="mono">{cases.length} CASES</span></div>
           <div className="rows">
-            <button className={`row${!active ? ' sel' : ''}`} onClick={() => setCaseId('')}><span className="row-main"><b>No case — general</b><small>levels, SOP, counselling lines</small></span></button>
+            <button className={`row${!active ? ' sel' : ''}`} onClick={() => setCaseId('')}><span className="row-main"><b>No case — general</b><small>ICDR grades, SOP, counselling</small></span></button>
             {cases.map((c) => (
-              <button key={c.id} className={`row${c.id === caseId ? ' sel' : ''}`} onClick={() => { setCaseId(c.id); setMsgs((m) => [...m, { who: 'bot', html: `Switched to <b>${c.id}</b> — ${c.patient}, Level ${c.grade}, ${c.confidence}% sure.` }]); }}>
-                <span className={`pill l${c.grade}`}>L{c.grade}</span>
+              <button key={c.id} className={`row${c.id === caseId ? ' sel' : ''}`} onClick={() => { setCaseId(c.id); setMsgs((m) => [...m, { who: 'bot', html: `Switched to <b>${c.id}</b> — ${c.patient}, Grade ${c.grade}, ${c.confidence}% sure.` }]); }}>
+                <span className={`pill l${c.grade}`}>G{c.grade}</span>
                 <span className="row-main"><b>{c.patient}</b><small>{c.id} · {c.eye}</small></span>
               </button>
             ))}
           </div>
         </section>
-        <section className="card"><div className="card-h"><b>{active ? `${active.id} · Level ${active.grade}` : 'General chat'}</b><span className="mono">POST /api/chat</span></div>
+        <section className="card"><div className="card-h"><b>{active ? `${active.id} · Grade ${active.grade}` : 'General chat'}</b><span className="mono">POST /api/chat</span></div>
           <div className="card-b">
             <div className="chat-log tall" ref={logRef}>{msgs.map((m, i) => (
               <div key={i} className={`msg ${m.who}`}><span className="who">{m.who === 'bot' ? 'SAHAYAK' : 'YOU'}</span><span dangerouslySetInnerHTML={{ __html: m.html }} /></div>

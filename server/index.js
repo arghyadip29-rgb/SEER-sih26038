@@ -124,21 +124,21 @@ function answerChat(question = '', ctx = {}) {
   const has = (a) => s.includes(a);
   const g = ctx.grade;
   const v = g != null && VERDICTS[g] ? VERDICTS[g] : null;
-  if (!v && (has('see') || has('level') || has('verdict') || has('find'))) return 'No verdict yet — upload a photo and press Analyze, or pick a sample. Then I will list every spot in plain words.';
+  if (!v && (has('see') || has('grade') || has('level') || has('verdict') || has('find'))) return 'No verdict yet — upload a fundus photograph and select Analyze, or pick a standard sample. Retinal findings will be itemized according to ICDR criteria.';
   if (has('photo') || has('quality') || has('blur') || has('dark') || has('good enough') || has('retake'))
-    return v ? `Photo quality is ${ctx.quality}/100 — ${ctx.sharpness}. ${ctx.quality < 65 ? 'It is on the dim side, so treat the grade cautiously and retake if you can (dim room, wipe lens).' : 'Good enough to grade. Light and haze were evened out automatically before grading.'}` : 'Upload first — quality (focus, light, view) is checked before anything else.';
-  if (has('why') || has('this level') || has('grade') || has('sure') || has('confiden'))
-    return `Why Level ${g}? ${v.findings.map((f) => f.h).join(' · ')}. Confidence ${ctx.confidence}% — calibrated on similar field photos. The heatmap glow sits on those spots; if glow and rings disagree, overrule the AI.`;
-  if (has('spot') || has('see') || has('bleed') || has('yellow') || has('vessel') || has('lesion') || has('find') || has('micro') || has('exudate'))
-    return `In this eye: ${v.findings.map((f) => f.h).join(' — ')}. Plain words: bulges = weak walls from high sugar; yellow deposits = leaked fat near reading vision; bleeds = burst tiny vessels; new vessels (L4) = fragile regrowth that can bleed suddenly.`;
+    return v ? `Image quality assessment: ${ctx.quality}/100 — ${ctx.sharpness}. ${ctx.quality < 65 ? 'Suboptimal illumination or focus; treat findings cautiously and consider acquiring a repeat fundus photograph.' : 'Gradable quality meeting screening criteria. Automated contrast normalization performed.'}` : 'Upload a fundus image first — image gradability (focus, illumination, field of view) is evaluated prior to grading.';
+  if (has('why') || has('this grade') || has('grade') || has('level') || has('sure') || has('confiden'))
+    return `Diagnostic rationale for Grade ${g}: ${v.findings.map((f) => f.h).join(' · ')}. Classifier confidence: ${ctx.confidence}%. Saliency map demonstrates spatial concordance with identified lesions. Findings should be clinician-verified.`;
+  if (has('spot') || has('see') || has('bleed') || has('yellow') || has('vessel') || has('lesion') || has('find') || has('micro') || has('exudate') || has('hemorrhage'))
+    return `Identified retinal features: ${v.findings.map((f) => f.h).join(' — ')}. Clinical significance: Microaneurysms represent capillary outpouchings; Hard Exudates represent lipoprotein leakage; Retinal Hemorrhages denote vessel integrity loss; Neovascularization (Grade 4) denotes ischemia-driven preretinal vessel proliferation.`;
   if (has('next') || has('refer') || has('tell') || has('patient') || has('treat') || has('advice') || has('hindi'))
-    return ({ 0: 'No referral. Say: “Photo looks healthy. Keep sugar and BP in range, come yearly.”', 1: 'No hospital trip yet. Say: “Very early sugar effect. Control sugar, recheck in 6–12 months.”', 2: 'Refer to eye doctor within 4 weeks. Say / कहें: “Sugar has affected the eye — an eye doctor must see you soon; sight is still saveable.”', 3: 'Urgent — within days. “Many bleeds seen; reading vision is at risk. Go to the eye hospital this week.”', 4: 'Emergency — hospital eye unit now. “New weak vessels — sudden bleeding risk. Go today.”' })[g] + ` (Confidence ${ctx.confidence}%.)`;
+    return ({ 0: 'No referral indicated for DR. Patient advice: “Retinal appearance within normal limits. Maintain target glycemic and blood pressure levels; schedule annual dilated screening.”', 1: 'Routine review in 6–12 months. Patient advice: “Mild early microvascular changes detected. Emphasize glycemic control; re-screen in 6–12 months.”', 2: 'Priority ophthalmology referral (within 4–6 weeks). Patient advice: “Diabetic changes present in retina requiring ophthalmic examination. Vision preservation interventions are available.”', 3: 'Urgent ophthalmologist consultation (within 1–2 weeks). Patient advice: “Severe non-proliferative changes with multiple quadrants involved. Prompt ophthalmic intervention advised.”', 4: 'Urgent same-day / immediate ophthalmology evaluation. Patient advice: “Active proliferative vessels present with imminent risk of vitreous hemorrhage or vision impairment. Urgent hospital evaluation required.”' })[g] + ` (Confidence ${ctx.confidence}%.)`;
   if (has('heatmap') || has('grad') || has('explain') || has('proof') || has('attention'))
-    return 'The purple-orange glow is the attention map (Grad-CAM style): brighter = more influence on the grade. Check it overlaps the rings in Spots view — that overlap is the 30-second doctor check.';
+    return 'The attention overlay (Grad-CAM saliency map) highlights retinal regions providing maximal feature contribution to the ICDR severity grade. Validate spatial concordance with segmented retinal lesions.';
   if (has('simulink') || has('scale') || has('bandwidth') || has('matlab'))
-    return 'Field design: photos compress to ~150 KB, offline-first, sync later. The Simulink model sizes cameras, bandwidth and doctor hours for 100,000+ patients per district per year. Targets: >90% catch rate, >85% correct rejections for Level 2+.';
-  if (has('hello') || has('namaste') || s.trim() === 'hi') return v ? `Namaste! Current case is Level ${g} — ask “what next?” for the referral line.` : 'Namaste! Upload a photo or pick a sample and I will get to work.';
-  return v ? `For this Level ${g} eye: ${v.action} Ask “what did you see?”, “why this level?” or “photo OK?” for specifics.` : 'Upload or pick a sample first, then ask about spots, level, referral, or photo quality.';
+    return 'Screening throughput modeling: images compressed (~150 KB), edge-capable offline inference, deferred telemetry sync. Simulink hardware sizing projects capacity for 100,000+ patient encounters per district annually with target >90% sensitivity for referable DR (Grade 2+).';
+  if (has('hello') || has('namaste') || s.trim() === 'hi') return v ? `Greetings. Current case is classified as Grade ${g} (${v.title}) — ask “what next?” for clinical referral recommendations.` : 'Greetings. Upload a retinal fundus photograph or choose a reference sample to begin screening.';
+  return v ? `For this Grade ${g} case: ${v.action} Ask regarding “identified findings”, “grading criteria”, or “image quality” for clinical details.` : 'Upload or pick a reference sample first, then inquire regarding lesions, ICDR grade, referral urgency, or image quality.';
 }
 
 app.post('/api/chat', (req, res) => {
@@ -150,7 +150,7 @@ app.post('/api/chat', (req, res) => {
 app.post('/api/report', (req, res) => {
   const { grade = 2, age = '-', years = '-', eye = '-', confidence = '-', quality = '-' } = req.body || {};
   const v = VERDICTS[Math.max(0, Math.min(4, Number(grade)))] || VERDICTS[2];
-  const txt = `DRISHTI — EYE CHECK REPORT (SIH26038 demo)\nPatient: ${age}y, diabetes ${years}y, ${eye}\nVerdict: ${v.title} (${confidence}% sure)\nPhoto quality: ${quality}/100\nFindings:\n${v.findings.map((f) => '- ' + f.h + ': ' + f.p).join('\n')}\nNext: ${v.action}\nNote: prototype demo, doctor must confirm.`;
+  const txt = `SEER — DIABETIC RETINOPATHY SCREENING REPORT (ICDR Framework)\nPatient: ${age}y, diabetes duration ${years}y, ${eye}\nICDR Classification: ${v.title} (${confidence}% confidence)\nImage Gradability: ${quality}/100\nKey Retinal Findings:\n${v.findings.map((f) => '- ' + f.h + ': ' + f.p).join('\n')}\nClinical Recommendation: ${v.action}\nNotice: AI-assisted screening assessment. Definitive diagnosis requires clinician examination.`;
   res.type('text/plain').send(txt);
 });
 

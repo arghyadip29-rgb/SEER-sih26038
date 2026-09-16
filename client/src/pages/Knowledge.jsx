@@ -132,9 +132,9 @@ export default function Knowledge() {
                    onMouseEnter={() => setHover(n.nid)} onMouseLeave={() => setHover(null)}
                    onClick={() => setSelected(selected === n.nid ? null : n.nid)} tabIndex={0}
                    onKeyDown={(e) => { if (e.key === 'Enter') setSelected(selected === n.nid ? null : n.nid); }}
-                   role="button" aria-label={n.kind === 'dataset' ? n.name : n.kind === 'anchor' ? `${n.nid} level ${n.grade}` : `${n.nid} level ${n.grade}`}>
+                   role="button" aria-label={n.kind === 'dataset' ? n.name : n.kind === 'anchor' ? `${n.nid} grade ${n.grade}` : `${n.nid} grade ${n.grade}`}>
                   {n.kind === 'dataset' && <><rect x={n.x - 62} y={n.y - 24} width={124} height={48} rx={10} className="kg-ds" /><text x={n.x} y={n.y - 2} textAnchor="middle" className="kg-t">{n.name}</text><text x={n.x} y={n.y + 14} textAnchor="middle" className="kg-s">{n.sub}</text></>}
-                  {n.kind === 'anchor' && <><circle cx={n.x} cy={n.y} r={17} className="kg-an" /><text x={n.x} y={n.y + 5} textAnchor="middle" className="kg-an-t">L{n.grade}</text><text x={n.x + 24} y={n.y + 4} className="kg-s">{n.nid}</text></>}
+                  {n.kind === 'anchor' && <><circle cx={n.x} cy={n.y} r={17} className="kg-an" /><text x={n.x} y={n.y + 5} textAnchor="middle" className="kg-an-t">G{n.grade}</text><text x={n.x + 24} y={n.y + 4} className="kg-s">{n.nid}</text></>}
                   {n.kind === 'analysis' && <><circle cx={n.x} cy={n.y} r={13} className="kg-ax" style={{ '--gc': GRADE_C[n.grade] }} /><text x={n.x} y={n.y + 4} textAnchor="middle" className="kg-ax-t">{n.grade}</text><text x={n.x + 20} y={n.y + 4} className="kg-s">{n.nid} · {n.confidence}%</text></>}
                 </g>
               ))}
@@ -157,10 +157,10 @@ export default function Knowledge() {
                 <h3>{sel.name}</h3><p className="muted">{sel.sub}</p><p><b>Role:</b> {sel.role}</p>
                 <p className="muted">{selEdges.length} links in current view.</p>
               </> : sel.kind === 'anchor' ? <>
-                <h3>{sel.nid} · Level {sel.grade}</h3><p className="muted">{sel.dataset}</p><p>{sel.note}</p>
+                <h3>{sel.nid} · Grade {sel.grade}</h3><p className="muted">{sel.dataset}</p><p>{sel.note}</p>
                 <p className="muted">{selEdges.length} links in current view.</p>
               </> : <>
-                <h3>{sel.nid} · Level {sel.grade}</h3>
+                <h3>{sel.nid} · Grade {sel.grade}</h3>
                 <p className="muted">{sel.confidence}% sure · quality {sel.quality}/100 · {sel.provider} · {new Date(sel.at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}</p>
                 <div className="tag">RULES APPLIED</div>
                 <ul className="anchor-list">{(sel.rules || []).map((r) => <li key={r} className="mono">{r}</li>)}</ul>

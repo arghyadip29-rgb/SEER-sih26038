@@ -1,20 +1,28 @@
 // Session + cases store (localStorage). Demo-ready, no backend dependency.
 
-const CASES_KEY = 'drishti-cases-v2';
-const SESSION_KEY = 'drishti-session-v1';
+const CASES_KEY = 'seer-cases-v1';
+const CASES_KEY_LEGACY = 'drishti-cases-v2';
+const SESSION_KEY = 'seer-session-v1';
+const SESSION_KEY_LEGACY = 'drishti-session-v1';
 
 export function getSession() {
-  try { return JSON.parse(localStorage.getItem(SESSION_KEY)) || null; } catch { return null; }
+  try {
+    return JSON.parse(localStorage.getItem(SESSION_KEY) || localStorage.getItem(SESSION_KEY_LEGACY)) || null;
+  } catch { return null; }
 }
 export function setSession(s) {
-  if (!s) localStorage.removeItem(SESSION_KEY);
-  else localStorage.setItem(SESSION_KEY, JSON.stringify(s));
+  if (!s) {
+    localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(SESSION_KEY_LEGACY);
+  } else {
+    localStorage.setItem(SESSION_KEY, JSON.stringify(s));
+  }
 }
 
 // No seed data — the queue starts empty and fills only with real screenings.
 export function getCases() {
   try {
-    const raw = localStorage.getItem(CASES_KEY);
+    const raw = localStorage.getItem(CASES_KEY) || localStorage.getItem(CASES_KEY_LEGACY);
     if (!raw) return [];
     const list = JSON.parse(raw);
     return Array.isArray(list) ? list : [];

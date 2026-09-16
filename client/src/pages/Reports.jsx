@@ -21,8 +21,8 @@ export default function Reports() {
       </div>
       <div className="kpi-grid three">
         <div className="kpi"><span className="tag">SCREENED</span><b>{cases.length}</b><small>this register</small></div>
-        <div className="kpi warn"><span className="tag">REFERABLE L2+</span><b>{ref.length}</b><small>slips to print</small></div>
-        <div className="kpi ok"><span className="tag">CLEARED L0</span><b>{cases.filter((c) => c.grade === 0).length}</b><small>yearly recall</small></div>
+        <div className="kpi warn"><span className="tag">REFERABLE (GRADE 2+)</span><b>{ref.length}</b><small>slips to print</small></div>
+        <div className="kpi ok"><span className="tag">CLEARED (GRADE 0)</span><b>{cases.filter((c) => c.grade === 0).length}</b><small>yearly recall</small></div>
       </div>
       <div className="two-col">
         <section className="card"><div className="card-h"><b>Volume by day</b><span className="mono">LAST CAMP DAYS</span></div>
@@ -37,7 +37,7 @@ export default function Reports() {
           <div className="rows">
             {ref.map((c) => (
               <div className="row" key={c.id}>
-                <span className={`pill l${c.grade}`}>L{c.grade}</span>
+                <span className={`pill l${c.grade}`}>G{c.grade}</span>
                 <span className="row-main"><b>{c.patient}</b><small>{c.id} · {STATUS_LABEL[c.status]}</small></span>
                 <button className="btn btn-outline btn-sm" onClick={() => slip(c)}>⬇ Slip</button>
               </div>
