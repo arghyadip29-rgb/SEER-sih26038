@@ -15,10 +15,10 @@
                        └───────────────┬───────────────────┘
                                        │ HTTP / REST
                        ┌───────────────▼───────────────┐
-                       │    Node.js Express Backend    │
-                       │    (Port 4000)                │
-                       └───┬───────────────────────┬───┘
-                           │                       │
+                       │    Python/ FastAPI Backend    │
+                       │                               │
+                       └───↑───────────────────────┬───┘
+            MATLAB Engine  │                       │
          ┌─────────────────▼────────┐    ┌─────────▼──────────────────┐
          │   MATLAB Service Layer   │    │      Database Layer        │
          │ • Preprocessing          │    │ • PostgreSQL (Primary)     │
@@ -26,8 +26,13 @@
          │ • Grad-CAM Heatmap Gen   │    │ • Sync Queue Service       │
          │ • 4-Quadrant Lesions     │    └────────────────────────────┘
          │ • ICDR Interpretation    │
-         └──────────────────────────┘
-```
+         └─────────│────────────────┘
+              ┌────▼─────────────────────────────────────────┐
+              │   Simulink / SimEvents                       │
+              │   (Referral Queue & Staffing Capacity Model) │
+              └──────────────────────────────────────────────┘
+              
+```                
 
 ---
 
