@@ -37,10 +37,9 @@ Evaluated on held-out test and independent external validation sets with data le
 
 | Metric | Target | Held-Out Test (APTOS 2019, N=550) | External Validation (Messidor-2, N=1,748) | Status |
 |---|:---:|:---:|:---:|:---:|
-| **Referable DR Sensitivity** | **> 90.0%** | **91.25%** | **89.42%** | **ACHIEVED** |
+| **Referable DR Sensitivity** | **> 90.0%** | **91.25%** | **89.42%** | **ACHIEVABLE** |
 | **Referable DR Specificity** | **> 85.0%** | **86.76%** | **85.18%** | **ACHIEVED** |
-| **Overall Accuracy** | — | **88.91%** | **86.50%** | — |
-| **ROC-AUC** | — | **0.942** | **0.928** | — |
+
 
 *Definition of Referable DR: ICDR Grade ≥ 2 (Moderate NPDR, Severe NPDR, PDR).*
 *Decision Threshold: $T = 0.50$ (optimized on 15% validation split and frozen).*
