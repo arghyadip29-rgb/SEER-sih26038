@@ -1,5 +1,6 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { getSession, setSession } from '../lib/store.js';
+import ThemeToggle from './ThemeToggle.jsx';
 
 const NAV = [
   { to: '/app', label: 'Overview', icon: '▦', end: true },
@@ -30,8 +31,11 @@ export default function Shell() {
   return (
     <div className="shell">
       <aside className="side" aria-label="Workspace">
-        <Link className="brand" to="/"><span className="brand-mark">◉</span>SEER</Link>
-        <div className="side-phc">{session.phc}<span>{session.doctor}</span></div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Link className="brand" to="/"><span className="brand-mark">◉</span>SEER</Link>
+          <ThemeToggle />
+        </div>
+        <div className="side-phc">{session.phc}<span>{session.doctor || session.name} · <strong style={{ color: 'var(--primary)' }}>{session.role === 'phc_worker' ? 'PHC Worker' : 'Doctor'}</strong></span></div>
         <nav className="side-nav">
           {NAV.map((n) => (
             <NavLink key={n.to} to={n.to} end={n.end} className={({ isActive }) => `side-link${isActive ? ' active' : ''}`}>

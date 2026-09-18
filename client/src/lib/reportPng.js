@@ -3,10 +3,10 @@
 // findings, doctor-validation stamp, footer. Returns a dataURL for download.
 
 import { paintFundus } from './fundus.js';
+import { gradeInfo, MACULAR_STATUS, IMAGE_QUALITY_LABEL } from './icdr.js';
 
 const W = 1240, H = 1754, M = 64;
 const INK = '#0f1e33', MUTED = '#5b6b84', LINE = '#e2e8f0', PRIMARY = '#0b5bd3';
-const GRADE_C = ['#0e9f8a', '#65a30d', '#b45309', '#ea580c', '#dc2626'];
 const STATUS = {
   queued: { t: 'IN REVIEW', c: '#b45309', bg: '#fef3c7' },
   referred: { t: 'REFERRED', c: '#b45309', bg: '#fef3c7' },
@@ -76,133 +76,156 @@ export function captureThumb(source, w = 480) {
 
 const fmtDate = (ts) => new Date(ts || Date.now()).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' });
 
-// c: case/result {id, patient, age, years, eye, grade, confidence, quality, sharpness, findings, status, note, validatedBy, validatedAt, createdAt, aid, seed, thumbnail}
-// img: HTMLImage/Canvas/dataURL (eye photo) — falls back to procedural render.
-// session: {doctor, phc} for the validation block header.
 export async function buildReportPng(c, img, session = {}) {
-  try { await document.fonts.ready; } catch { /* system fonts are fine */ }
+  try { await document.fonts.ready; } catch { /* system fonts */ }
   const photo = (typeof img === 'string' ? await loadImage(img) : img) || proceduralImage(c.seed, c.grade);
   const cv = document.createElement('canvas');
   cv.width = W; cv.height = H;
   const ctx = cv.getContext('2d');
   if (!ctx.roundRect) ctx.roundRect = function (x, y, w, h) { this.rect(x, y, w, h); return this; };
   const st = STATUS[c.status] || STATUS.pending;
-  const gc = GRADE_C[c.grade] ?? PRIMARY;
+  const gi = gradeInfo(c.grade);
 
-  // page
+  // page background
   ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, H);
   ctx.textBaseline = 'alphabetic';
 
   // header band
   ctx.fillStyle = INK; ctx.fillRect(0, 0, W, 190);
   ctx.fillStyle = '#fff'; ctx.textAlign = 'left';
-  ctx.font = "800 40px Sora, Inter, sans-serif";
-  ctx.fillText('◉  SEER', M, 78);
-  ctx.font = "500 24px Inter, sans-serif"; ctx.fillStyle = '#aebdcc';
-  ctx.fillText(session.phc || 'Rural Eye Screening · SIH26038', M, 122);
-  ctx.fillStyle = '#fff'; ctx.font = "700 34px Sora, Inter, sans-serif"; ctx.textAlign = 'right';
-  ctx.fillText('Diabetic Eye Check — Report', W - M, 78);
-  ctx.font = "500 23px 'IBM Plex Mono', monospace"; ctx.fillStyle = '#aebdcc';
-  ctx.fillText(`${c.id || 'DRAFT'}  ·  ${fmtDate(c.createdAt)}`, W - M, 122);
+  ctx.font = "800 38px Sora, Inter, sans-serif";
+  ctx.fillText('◉  SEER', M, 76);
+  ctx.font = "500 22px Inter, sans-serif"; ctx.fillStyle = '#aebdcc';
+  ctx.fillText(session.phc || 'Rural Health Centre · DR Screening Protocol', M, 118);
+  ctx.fillStyle = '#fff'; ctx.font = "700 30px Sora, Inter, sans-serif"; ctx.textAlign = 'right';
+  ctx.fillText('Diabetic Retinopathy Screening Report', W - M, 76);
+  ctx.font = "500 21px 'IBM Plex Mono', monospace"; ctx.fillStyle = '#aebdcc';
+  ctx.fillText(`ID: ${c.id || 'DRAFT'}  ·  ${fmtDate(c.createdAt)}`, W - M, 118);
   ctx.textAlign = 'left';
 
-  let y = 250;
-  const hair = (yy) => { ctx.strokeStyle = LINE; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(M, yy); ctx.lineTo(W - M, yy); ctx.stroke(); };
+  let y = 236;
+  const hair = (yy) => { ctx.strokeStyle = LINE; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(M, yy); ctx.lineTo(W - M, yy); ctx.stroke(); };
   const section = (t) => {
-    ctx.font = "600 21px 'IBM Plex Mono', monospace"; ctx.fillStyle = PRIMARY;
-    ctx.fillText(t.toUpperCase(), M, y); y += 16;
+    ctx.font = "700 20px 'IBM Plex Mono', monospace"; ctx.fillStyle = PRIMARY;
+    ctx.fillText(t.toUpperCase(), M, y); y += 14;
   };
 
   // patient details
-  section('Patient details'); y += 14;
-  ctx.font = '500 26px Inter, sans-serif';
+  section('1. Patient & Examination Details'); y += 12;
   const rows = [
-    ['Name', c.patient || 'Unnamed patient', 'Age', c.age != null && c.age !== '' ? `${c.age} years` : '—'],
-    ['Diabetes', c.years != null && c.years !== '' ? `${c.years} years` : '—', 'Eye', c.eye || '—'],
-    ['Camera', c.camera || 'Portable fundus camera', 'Analysis', c.aid ? `${c.aid} · ${c.source || 'upload'}` : (c.source || 'upload')],
+    ['Patient Name', c.patient || 'Unnamed patient', 'Age', c.age != null && c.age !== '' ? `${c.age} years` : '—'],
+    ['Diabetes Duration', c.years != null && c.years !== '' ? `${c.years} years` : '—', 'Eye Examined', c.eye || '—'],
+    ['Camera System', c.camera || 'Portable Fundus Camera', 'Image Gradability', `${IMAGE_QUALITY_LABEL(c.quality)} (${c.quality ?? '—'}/100)`],
   ];
   for (const [k1, v1, k2, v2] of rows) {
-    ctx.fillStyle = MUTED; ctx.font = '500 22px Inter, sans-serif';
+    ctx.fillStyle = MUTED; ctx.font = '500 21px Inter, sans-serif';
     ctx.fillText(k1, M, y); ctx.fillText(k2, M + 560, y);
-    ctx.fillStyle = INK; ctx.font = '600 25px Inter, sans-serif';
-    ctx.fillText(String(v1).slice(0, 30), M + 150, y);
-    ctx.fillText(String(v2).slice(0, 30), M + 710, y);
-    y += 44;
+    ctx.fillStyle = INK; ctx.font = '600 23px Inter, sans-serif';
+    ctx.fillText(String(v1).slice(0, 32), M + 210, y);
+    ctx.fillText(String(v2).slice(0, 32), M + 760, y);
+    y += 38;
   }
-  y += 8; hair(y); y += 44;
+  y += 4; hair(y); y += 38;
 
-  // image + verdict
-  section('Eye image  ·  Verdict'); y += 14;
-  const imgW = 640, imgH = 448;
+  // image + clinical verdict
+  section('2. Fundus Photograph & ICDR Classification'); y += 14;
+  const imgW = 600, imgH = 420;
   drawCover(ctx, photo, M, y, imgW, imgH);
-  const vx = M + imgW + 40, vw = W - M - vx;
-  // grade badge
-  ctx.fillStyle = gc; ctx.beginPath(); ctx.roundRect(vx, y, vw, 120, 14); ctx.fill();
-  ctx.fillStyle = '#fff'; ctx.font = '800 44px Sora, Inter, sans-serif';
-  ctx.fillText(`Level ${c.grade ?? '—'}`, vx + 26, y + 62);
-  ctx.font = '500 22px Inter, sans-serif';
-  ctx.fillText(String(STATUS[c.status]?.t || `Grade ${c.grade ?? ''}`).slice(0, 26), vx + 26, y + 96);
-  let vy = y + 160;
-  ctx.fillStyle = MUTED; ctx.font = '500 22px Inter, sans-serif';
-  ctx.fillText('Confidence', vx, vy);
-  ctx.fillStyle = INK; ctx.font = "600 24px 'IBM Plex Mono', monospace";
-  ctx.fillText(`${c.confidence ?? '—'}% sure`, vx + 200, vy); vy += 42;
-  ctx.fillStyle = MUTED; ctx.font = '500 22px Inter, sans-serif';
-  ctx.fillText('Photo quality', vx, vy);
-  ctx.fillStyle = INK; ctx.font = "600 24px 'IBM Plex Mono', monospace";
-  ctx.fillText(`${c.quality ?? '—'} / 100`, vx + 200, vy); vy += 42;
-  ctx.fillStyle = MUTED; ctx.font = '500 22px Inter, sans-serif';
-  ctx.fillText('Sharpness', vx, vy);
-  ctx.fillStyle = INK; ctx.font = '600 22px Inter, sans-serif';
-  wrap(ctx, c.sharpness || '—', vw - 200).slice(0, 2).forEach((l, i) => ctx.fillText(l, vx + 200, vy + i * 30));
-  y += imgH + 36; hair(y); y += 44;
 
-  // findings
-  section('Findings (plain words)'); y += 14;
-  ctx.font = '500 25px Inter, sans-serif';
-  const findings = (c.findings || []).map((f) => ({ h: f.h || f.title || '', p: f.p || f.desc || '' }));
-  if (!findings.length) { ctx.fillStyle = MUTED; ctx.fillText('No findings recorded.', M, y); y += 40; }
-  findings.slice(0, 6).forEach((f, i) => {
-    ctx.fillStyle = gc;
-    ctx.beginPath(); ctx.arc(M + 14, y - 8, 12, 0, 7); ctx.fill();
-    ctx.fillStyle = '#fff'; ctx.font = '700 20px Inter, sans-serif'; ctx.textAlign = 'center';
-    ctx.fillText(String(i + 1), M + 14, y - 1);
-    ctx.textAlign = 'left'; ctx.fillStyle = INK; ctx.font = '700 25px Inter, sans-serif';
-    ctx.fillText(String(f.h).slice(0, 62), M + 44, y);
-    y += 34;
-    ctx.fillStyle = MUTED; ctx.font = '500 23px Inter, sans-serif';
-    wrap(ctx, f.p, W - M * 2 - 44).slice(0, 2).forEach((l) => { ctx.fillText(l, M + 44, y); y += 32; });
-    y += 10;
-  });
-  hair(y); y += 44;
+  // draw annotation badge on image
+  ctx.fillStyle = 'rgba(15, 30, 51, 0.78)';
+  ctx.beginPath(); ctx.roundRect(M + 14, y + imgH - 42, 330, 30, 6); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.font = "600 14px 'IBM Plex Mono', monospace";
+  ctx.fillText('○ AI-detected retinal abnormality region', M + 24, y + imgH - 22);
 
-  // doctor validation
-  section('Doctor validation'); y += 14;
-  ctx.fillStyle = st.bg; ctx.strokeStyle = st.c; ctx.lineWidth = 2.5;
-  ctx.beginPath(); ctx.roundRect(M, y, W - M * 2, 300, 14); ctx.fill(); ctx.stroke();
-  const bx = M + 30; let by = y + 52;
-  ctx.fillStyle = st.c; ctx.font = '800 34px Sora, Inter, sans-serif';
-  ctx.fillText(`✓  ${st.t}`, bx, by); by += 52;
-  ctx.fillStyle = INK; ctx.font = '500 24px Inter, sans-serif';
-  const who = c.validatedBy || session.doctor || 'Duty doctor';
-  ctx.fillText(`Validated by:  ${who}`, bx, by); by += 42;
-  ctx.fillText(`Centre:  ${session.phc || '—'}`, bx, by); by += 42;
-  ctx.fillText(`On:  ${fmtDate(c.validatedAt || c.createdAt)}`, bx, by); by += 42;
-  ctx.fillStyle = MUTED;
-  wrap(ctx, `Note: ${c.note || 'No note recorded.'}`, W - M * 2 - 60).slice(0, 2).forEach((l) => { ctx.fillText(l, bx, by); by += 36; });
-  y += 336;
-  ctx.fillStyle = MUTED; ctx.font = 'italic 500 22px Inter, sans-serif';
-  ctx.fillText('Signature / stamp:', M, y + 8);
-  ctx.strokeStyle = MUTED; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(M + 260, y + 8); ctx.lineTo(M + 700, y + 8); ctx.stroke();
-  y += 64;
+  const vx = M + imgW + 36, vw = W - M - vx;
 
-  // footer
-  hair(H - 120);
+  // ICDR grade banner
+  ctx.fillStyle = gi.c; ctx.beginPath(); ctx.roundRect(vx, y, vw, 116, 12); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.font = '800 38px Sora, Inter, sans-serif';
+  ctx.fillText(gi.label, vx + 22, y + 54);
+  ctx.font = '600 19px Inter, sans-serif';
+  ctx.fillText(gi.short, vx + 22, y + 88);
+
+  let vy = y + 150;
   ctx.fillStyle = MUTED; ctx.font = '500 20px Inter, sans-serif';
-  ctx.fillText('Prototype screening aid for SIH26038 — final diagnosis rests with the ophthalmologist.', M, H - 78);
-  ctx.textAlign = 'right'; ctx.font = "500 20px 'IBM Plex Mono', monospace";
-  ctx.fillText('seer · sih26038', W - M, H - 78);
+  ctx.fillText('Clinical Severity', vx, vy);
+  ctx.fillStyle = INK; ctx.font = '700 21px Inter, sans-serif';
+  wrap(ctx, gi.title, vw - 190).slice(0, 2).forEach((l, i) => ctx.fillText(l, vx + 190, vy + i * 26));
+  vy += 58;
+
+  ctx.fillStyle = MUTED; ctx.font = '500 20px Inter, sans-serif';
+  ctx.fillText('Model Confidence', vx, vy);
+  ctx.fillStyle = INK; ctx.font = "700 22px 'IBM Plex Mono', monospace";
+  ctx.fillText(`${c.confidence ?? '—'}% calibrated`, vx + 190, vy); vy += 40;
+
+  ctx.fillStyle = MUTED; ctx.font = '500 20px Inter, sans-serif';
+  ctx.fillText('Macular Status', vx, vy);
+  ctx.fillStyle = INK; ctx.font = '700 21px Inter, sans-serif';
+  ctx.fillText(`Edema ${MACULAR_STATUS[c.grade] ?? 'Not apparent'}`, vx + 190, vy); vy += 40;
+
+  ctx.fillStyle = MUTED; ctx.font = '500 20px Inter, sans-serif';
+  ctx.fillText('Clinical Urgency', vx, vy);
+  ctx.fillStyle = gi.c; ctx.font = "800 20px 'IBM Plex Mono', monospace";
+  ctx.fillText(gi.urgency, vx + 190, vy);
+
+  y += imgH + 28; hair(y); y += 36;
+
+  // patient explanation section (Part 8 & 12)
+  section('3. What This Means (Patient Explanation)'); y += 12;
+  ctx.fillStyle = INK; ctx.font = '600 24px Inter, sans-serif';
+  wrap(ctx, gi.patientTitle, W - M * 2).slice(0, 2).forEach((l) => { ctx.fillText(l, M, y); y += 30; });
+  ctx.fillStyle = MUTED; ctx.font = '500 21px Inter, sans-serif';
+  wrap(ctx, gi.patientDesc, W - M * 2).slice(0, 3).forEach((l) => { ctx.fillText(l, M, y); y += 28; });
+  y += 10; hair(y); y += 36;
+
+  // key findings list
+  section('4. Key Retinal Findings (ICDR Scale)'); y += 12;
+  const findingsList = [
+    { name: 'Microaneurysms', val: c.grade >= 1 ? 'Detected' : 'Not detected', desc: 'Early capillary wall bulges' },
+    { name: 'Retinal Hemorrhages', val: c.grade >= 2 ? (c.grade >= 3 ? 'Detected (Multi-quadrant)' : 'Detected') : 'Not detected', desc: 'Intraretinal vascular leakage' },
+    { name: 'Hard Exudates', val: c.grade >= 2 ? 'Detected' : 'Not detected', desc: 'Lipoprotein deposits' },
+    { name: 'Neovascularization', val: c.grade >= 4 ? 'Detected (PDR)' : 'Not detected', desc: 'Abnormal new vessel growth' },
+  ];
+  const colW = (W - M * 2) / 2;
+  findingsList.forEach((f, i) => {
+    const colX = M + (i % 2) * colW;
+    const rowY = y + Math.floor(i / 2) * 52;
+    ctx.fillStyle = f.val.startsWith('Detected') ? '#dc2626' : '#0e9f8a';
+    ctx.beginPath(); ctx.arc(colX + 10, rowY - 6, 8, 0, 7); ctx.fill();
+    ctx.fillStyle = INK; ctx.font = '700 21px Inter, sans-serif';
+    ctx.fillText(`${f.name}: `, colX + 28, rowY);
+    ctx.fillStyle = f.val.startsWith('Detected') ? '#dc2626' : '#0e9f8a';
+    ctx.fillText(f.val, colX + 28 + ctx.measureText(`${f.name}: `).width, rowY);
+  });
+  y += 114; hair(y); y += 36;
+
+  // clinician review / validation block
+  section('5. Clinician Validation & Referral Slip'); y += 12;
+  ctx.fillStyle = st.bg; ctx.strokeStyle = st.c; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.roundRect(M, y, W - M * 2, 220, 10); ctx.fill(); ctx.stroke();
+  const bx = M + 24; let by = y + 42;
+  ctx.fillStyle = st.c; ctx.font = '800 28px Sora, Inter, sans-serif';
+  ctx.fillText(`✓  ${st.t}`, bx, by); by += 42;
+  ctx.fillStyle = INK; ctx.font = '500 21px Inter, sans-serif';
+  const who = c.validatedBy || session.doctor || 'Examining Clinician';
+  ctx.fillText(`Validated by:  ${who}    ·    Centre:  ${session.phc || 'Primary Health Centre'}`, bx, by); by += 36;
+  ctx.fillText(`Clinical Action:  ${gi.urgencyMsg}`, bx, by); by += 36;
+  ctx.fillStyle = MUTED;
+  wrap(ctx, `Clinician Note: ${c.note || 'Screening photo taken, AI analysis reviewed.'}`, W - M * 2 - 48).slice(0, 2).forEach((l) => { ctx.fillText(l, bx, by); by += 30; });
+
+  y += 240;
+  ctx.fillStyle = MUTED; ctx.font = 'italic 500 20px Inter, sans-serif';
+  ctx.fillText('Signature / Stamp of Eye-Care Professional:', M, y + 10);
+  ctx.strokeStyle = MUTED; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(M + 460, y + 10); ctx.lineTo(M + 880, y + 10); ctx.stroke();
+
+  // footer with required disclaimer (Part 12 & 17)
+  hair(H - 100);
+  ctx.fillStyle = MUTED; ctx.font = '500 17px Inter, sans-serif';
+  ctx.fillText('DISCLAIMER: This screening report is intended for preliminary screening support and does not replace examination or diagnosis by a qualified eye-care professional.', M, H - 64);
+  ctx.textAlign = 'right'; ctx.font = "500 17px 'IBM Plex Mono', monospace";
+  ctx.fillText('SEER · ICDR Scale Protocol', W - M, H - 64);
   ctx.textAlign = 'left';
 
   return cv.toDataURL('image/png');

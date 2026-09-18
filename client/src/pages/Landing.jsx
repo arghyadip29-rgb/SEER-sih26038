@@ -2,13 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { paintFundus } from '../lib/fundus.js';
 import seerLogo from '../assets/seer-logo.png';
+import ThemeToggle from '../components/ThemeToggle.jsx';
 
 export const LEVELS = [
-  { n: 0, c: '#0e9f8a', t: 'No signs', d: 'Retina looks healthy. No spots or bleeds seen in this photo.', a: 'Yearly photo check' },
-  { n: 1, c: '#65a30d', t: 'Mild — tiny bulges only', d: 'A few pin-head vessel bulges (microaneurysms). Vision usually fine.', a: 'Recheck in 6–12 months' },
-  { n: 2, c: '#b45309', t: 'Moderate — needs an eye doctor', d: 'Bleeds and/or yellow deposits present. This is the referral line.', a: 'Eye doctor within 4 weeks' },
-  { n: 3, c: '#ea580c', t: 'Severe — many bleeds', d: 'Bleeds across zones, twisted bead-like vessels. Reading vision at risk.', a: 'Urgent — within days' },
-  { n: 4, c: '#dc2626', t: 'Advanced — new vessels', d: 'Fragile new vessels growing. Sudden bleeding risk.', a: 'Emergency — hospital now' },
+  { n: 0, c: '#0e9f8a', t: 'Grade 0 — No Apparent DR', d: 'Retina appears healthy. No microaneurysms, retinal hemorrhages, or exudates identified.', a: 'Routine annual review' },
+  { n: 1, c: '#65a30d', t: 'Grade 1 — Mild NPDR', d: 'Microaneurysms only. Small vessel wall outpouchings; vision is typically unaffected.', a: 'Recheck in 6–12 months' },
+  { n: 2, c: '#b45309', t: 'Grade 2 — Moderate NPDR', d: 'Retinal hemorrhages and/or hard exudates detected. Clinical referral threshold.', a: 'Eye-care review within 4 weeks' },
+  { n: 3, c: '#ea580c', t: 'Grade 3 — Severe NPDR', d: 'Multi-quadrant retinal hemorrhages or venous beading. High risk of progression.', a: 'Urgent referral within days' },
+  { n: 4, c: '#dc2626', t: 'Grade 4 — Proliferative DR (PDR)', d: 'Neovascularization (abnormal new vessels). Immediate risk of vision loss.', a: 'Emergency — hospital eye unit' },
 ];
 
 export function AppBar() {
@@ -18,11 +19,12 @@ export function AppBar() {
         <Link className="brand" to="/"><span className="brand-mark">◉</span>SEER</Link>
         <nav className="nav-links" aria-label="Main">
           <a href="#how">How it checks</a>
-          <a href="#levels">Levels 0–4</a>
+          <a href="#grades">ICDR Grades 0–4</a>
           <a href="#rural">For rural PHCs</a>
         </nav>
+        <ThemeToggle />
         <span className="ps-chip">SIH26038 · MathWorks</span>
-        <Link className="btn btn-primary btn-sm" to="/login">Doctor sign in →</Link>
+        <Link className="btn btn-primary btn-sm" to="/login">Sign In →</Link>
       </div>
     </div>
   );
@@ -64,10 +66,10 @@ function EyeCompare() {
       </div>
       <div className="card-b" style={{ display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
         <div className="legend">
-          <span><i style={{ background: '#dc2626' }} />Bleed</span>
-          <span><i style={{ background: '#b45309' }} />Yellow deposit</span>
-          <span><i style={{ background: '#0b5bd3' }} />AI attention</span>
-          <span><i style={{ background: '#0e9f8a' }} />Vessel</span>
+          <span><i style={{ background: '#dc2626' }} />Retinal Hemorrhages</span>
+          <span><i style={{ background: '#b45309' }} />Hard Exudates</span>
+          <span><i style={{ background: '#0b5bd3' }} />AI Attention</span>
+          <span><i style={{ background: '#0e9f8a' }} />Retinal Vasculature</span>
         </div>
         <Link className="btn btn-outline btn-sm" to="/login">Try on your photo →</Link>
       </div>
@@ -80,17 +82,17 @@ function Spectrum() {
   const l = LEVELS[sel];
   return (
     <div>
-      <div className="spectrum" role="group" aria-label="Severity levels 0 to 4">
+      <div className="spectrum" role="group" aria-label="Severity grades 0 to 4 based on ICDR scale">
         {LEVELS.map((x) => (
           <button key={x.n} className={`spec-seg${sel === x.n ? ' sel' : ''}`} style={{ '--sc': x.c }}
             aria-pressed={sel === x.n} onClick={() => setSel(x.n)} onMouseEnter={() => setSel(x.n)}>
-            <span>L{x.n}</span>
+            <span>Grade {x.n}</span>
           </button>
         ))}
         <span className="spec-threshold" aria-hidden="true">refer →</span>
       </div>
       <div className="spec-detail" aria-live="polite">
-        <span className="pill" style={{ background: l.c }}>L{l.n}</span>
+        <span className="pill" style={{ background: l.c }}>Grade {l.n}</span>
         <div><b>{l.t}</b><p>{l.d}</p><span className="act">→ {l.a}</span></div>
       </div>
     </div>
@@ -106,9 +108,9 @@ export default function Landing() {
           <div>
             <span className="eyebrow">For PHCs · Portable-camera ready · English + हिन्दी</span>
             <h1 className="hero-title">Diabetes can steal sight before you feel it. We catch it early.</h1>
-            <p className="lead"><strong>SEER</strong> checks a photo of the back of the eye and <strong>shows its work</strong> — what it saw, where, and how sure it is. <strong>No jargon. 30-second verdict.</strong></p>
+            <p className="lead"><strong>SEER</strong> checks a photo of the back of the eye and <strong>shows its work</strong> — what it saw, where, and how sure it is. <strong>ICDR-aligned grading. 30-second verdict.</strong></p>
             <div className="hero-cta">
-              <Link className="btn btn-primary" to="/login">Open Doctor Dashboard →</Link>
+              <Link className="btn btn-primary" to="/login">Open Dashboard →</Link>
               <a className="btn btn-outline" href="#how">See how it checks</a>
             </div>
           </div>
@@ -127,18 +129,18 @@ export default function Landing() {
       <main className="wrap">
         <section className="section" id="how">
           <div className="sec-head"><span className="kicker">How SEER checks</span>
-            <h2>Not a black box. A careful assistant.</h2></div>
+            <h2>Not a black box. A careful clinical screening aid.</h2></div>
           <ol className="flow3">
-            <li><span className="fnum">01</span><div><b>Is this photo checkable?</b><p>Focus, light, view — scored first. Blurry means retake help, never a guess.</p></div></li>
-            <li><span className="fnum">02</span><div><b>Find the early signs</b><p>Tiny bulges, yellow deposits, bleeds, fragile new vessels — outlined on the photo.</p></div></li>
-            <li><span className="fnum">03</span><div><b>Grade + proof</b><p>Level 0–4, confidence, heatmap, and a one-line next step. Confirmed in 30 seconds.</p></div></li>
+            <li><span className="fnum">01</span><div><b>Is this photo gradable?</b><p>Focus, light, view — scored first. Blurry or dim photos receive retake guidance, never an unreliable grade.</p></div></li>
+            <li><span className="fnum">02</span><div><b>Detect clinical lesions</b><p>Microaneurysms, retinal hemorrhages, hard exudates, neovascularization — localized on the fundus photograph.</p></div></li>
+            <li><span className="fnum">03</span><div><b>ICDR grade + evidence</b><p>Grade 0–4 (ICDR severity scale), confidence, attention heatmap, and referral urgency. Confirmed in 30 seconds.</p></div></li>
           </ol>
         </section>
 
-        <section className="section" id="levels">
-          <div className="sec-head"><span className="kicker">Levels 0–4 · No jargon</span>
+        <section className="section" id="grades">
+          <div className="sec-head"><span className="kicker">Grades 0–4 · ICDR Framework</span>
             <h2>One spectrum, one referral line.</h2>
-            <p>Same scale eye doctors use worldwide. Level 2 is where action starts.</p></div>
+            <p>DR severity terminology based on the International Clinical Diabetic Retinopathy framework. Grade 2 is where referable care starts.</p></div>
           <Spectrum />
         </section>
 
@@ -155,7 +157,7 @@ export default function Landing() {
             <div className="rural-card dark">
               <span className="kicker" style={{ color: '#9ec1ff' }}>Accuracy target · SIH26038</span>
               <h3>&gt;90% catch rate<br />&gt;85% correct rejections</h3>
-              <p>For <i>referable</i> disease (Level 2+). Node API mirrors the MATLAB pipeline: quality → enhance → segment → grade → explain.</p>
+              <p>For <i>referable</i> disease (Grade 2+). Node API mirrors the MATLAB pipeline: quality → enhance → segment → grade → explain.</p>
               <div style={{ marginTop: 14 }}><Link className="btn btn-white" to="/login">Open Doctor Dashboard →</Link></div>
             </div>
           </div>
@@ -163,13 +165,13 @@ export default function Landing() {
 
         <div className="banner">
           <h2>One photo can save a farmer’s sight.</h2>
-          <p>Upload a retina photo. Get a level, a heatmap, and a next step — then ask the assistant anything, in simple words.</p>
+          <p>Upload a retina photo. Get an ICDR clinical grade, localization evidence, and patient next steps — then ask the assistant anything, in simple words.</p>
           <div style={{ marginTop: 14, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <Link className="btn btn-white" to="/login">Launch Doctor Dashboard →</Link>
           </div>
         </div>
       </main>
-      <footer className="wrap foot"><div className="foot-in"><span>SEER · SIH26038 · Explainable AI for Diabetic Retinopathy Screening</span><span>Prototype demo — not a medical device. Doctor must confirm.</span></div></footer>
+      <footer className="wrap foot"><div className="foot-in"><span>SEER · SIH26038 · Explainable AI for Diabetic Retinopathy Screening</span><span>Prototype screening aid — not a medical device. Clinical findings require ophthalmologist confirmation.</span></div></footer>
     </>
   );
 }

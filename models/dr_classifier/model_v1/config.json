@@ -1,0 +1,28 @@
+{
+  "model_name": "resnet50_dr_screening_v1.2",
+  "framework": "MATLAB Deep Learning Toolbox / dlnetwork",
+  "backbone": "ResNet-50 (ImageNet initialized)",
+  "num_classes": 5,
+  "input_resolution": [224, 224, 3],
+  "grading_standard": "ICDR (International Clinical Diabetic Retinopathy Disease Severity Scale)",
+  "referable_dr_mapping": {
+    "non_referable": [0, 1],
+    "referable": [2, 3, 4]
+  },
+  "decision_threshold_referable": 0.50,
+  "training": {
+    "optimizer": "Adam",
+    "initial_learning_rate": 0.0001,
+    "batch_size": 32,
+    "max_epochs": 25,
+    "l2_regularization": 0.001
+  },
+  "datasets": {
+    "training": "APTOS 2019 Blindness Detection (70% train split: 2,563 images)",
+    "validation": "APTOS 2019 (15% validation split: 549 images)",
+    "held_out_test": "APTOS 2019 (15% held-out test split: 550 images)",
+    "lesion_reference": "IDRiD (Indian Diabetic Retinopathy Image Dataset)",
+    "vessel_reference": "DRIVE (Vessel segmentation only)",
+    "external_validation": "Messidor-2 (1,748 images)"
+  }
+}

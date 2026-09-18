@@ -1,0 +1,6 @@
+If:
+  PathMatch: .*(\.m|matlab/.*)
+Diagnostics:
+  Suppress: ["*"]
+CompileFlags:
+  Remove: ["*"]

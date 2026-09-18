@@ -3,5 +3,11 @@ dist/
 .env
 .env.*
 server/data/
+server/uploads/
+data/
+*.sqlite
+*.sqlite3
+*.mat
 *.log
 .DS_Store
+

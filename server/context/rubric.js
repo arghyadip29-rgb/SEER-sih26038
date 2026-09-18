@@ -5,25 +5,25 @@
 export const PACKET_VERSION = 'p0.1';
 
 export const RUBRIC = [
-  { grade: 0, name: 'No signs', rule: 'Zero microaneurysms, zero bleeds, zero exudates. Clean vessels, sharp disc.', action: 'No referral. Yearly photo check.' },
-  { grade: 1, name: 'Mild', rule: 'Microaneurysms ONLY (a few pin-head red dots). No bleeds, no exudates, no beading.', action: 'No referral yet. Sugar control, recheck 6–12 months.' },
-  { grade: 2, name: 'Moderate — REFERABLE', rule: 'Any bleed OR any hard exudate, or crowded microaneurysms. This is the referral threshold.', action: 'Refer to eye doctor within 4 weeks.' },
-  { grade: 3, name: 'Severe — URGENT', rule: 'Many bleeds across zones, venous beading, or large blot areas. Reading vision threatened.', action: 'Urgent — eye doctor within days.' },
-  { grade: 4, name: 'Advanced (proliferative) — EMERGENCY', rule: 'ANY new fragile vessels (neovascularization), however small. Overrides everything below.', action: 'Emergency — hospital eye unit now.' },
+  { grade: 0, name: 'Grade 0 · No Apparent Retinopathy', rule: 'Zero microaneurysms, zero retinal hemorrhages, zero hard exudates. Clear vessels, sharp optic disc.', action: 'No referral indicated for DR. Annual dilated screening recommended.' },
+  { grade: 1, name: 'Grade 1 · Mild Non-Proliferative DR (Mild NPDR)', rule: 'Microaneurysms only. No retinal hemorrhages, hard exudates, or venous beading.', action: 'Routine review in 6–12 months. Glycemic and blood pressure optimization.' },
+  { grade: 2, name: 'Grade 2 · Moderate Non-Proliferative DR (Moderate NPDR)', rule: 'Microaneurysms, retinal hemorrhages, and/or hard exudates present, but less than Severe NPDR criteria.', action: 'Priority ophthalmology referral within 4–6 weeks.' },
+  { grade: 3, name: 'Grade 3 · Severe Non-Proliferative DR (Severe NPDR)', rule: 'Extensive intraretinal hemorrhages (≥20 in each of 4 quadrants), venous beading in ≥2 quadrants, or prominent IRMA in ≥1 quadrant (ICDR 4-2-1 rule).', action: 'Urgent ophthalmologist consultation within 1–2 weeks.' },
+  { grade: 4, name: 'Grade 4 · Proliferative Diabetic Retinopathy (PDR)', rule: 'Neovascularization of the disc (NVD) or elsewhere (NVE), and/or preretinal or vitreous hemorrhage.', action: 'Urgent same-day / immediate ophthalmology evaluation for specialized management.' },
 ];
 
 // IDRiD-derived priors: lesion pixels are rare, so small counts are meaningful.
 export const PRIORS =
   'Scale priors from IDRiD: microaneurysm pixels ≈0.1% of image area, hemorrhages ≈1%, exudates ≈0.9%. ' +
-  'A handful of pin-head red dots is a real finding, not noise. Soft exudates are uncommon — do not expect them in every case.';
+  'Microaneurysms represent genuine focal capillary pathology. Cotton-wool spots indicate focal nerve fiber layer ischemia.';
 
 export const LESION_GLOSSARY = {
-  microaneurysm: { label: 'Tiny bulges (microaneurysms)', plain: 'Pin-head weak spots on vessel walls from high sugar. Earliest sign.' },
-  hemorrhage: { label: 'Bleeds (hemorrhages)', plain: 'Small red patches where tiny vessels leaked.' },
-  hard_exudate: { label: 'Yellow deposits (hard exudates)', plain: 'Leaked fat and protein near the centre. Threatens reading vision.' },
-  soft_exudate: { label: 'Soft yellow patches (soft exudates)', plain: 'Pale fluffy patches where nerve fibres are starved of blood.' },
-  venous_beading: { label: 'Bead-like, twisted vessels', plain: 'Vessels swell unevenly — a severe-stage clue.' },
-  neovascularization: { label: 'New fragile vessels', plain: 'Thin, lacy regrowth that bleeds easily and can steal sight suddenly.' },
+  microaneurysm: { label: 'Microaneurysms', plain: 'Focal capillary wall outpouchings appearing as small red dots; earliest clinical hallmark of diabetic retinopathy.' },
+  hemorrhage: { label: 'Retinal Hemorrhages', plain: 'Dot, blot, or flame-shaped intraretinal hemorrhages caused by capillary compromise and vascular hyperpermeability.' },
+  hard_exudate: { label: 'Hard Exudates', plain: 'Discrete yellow lipid and protein precipitates resulting from vascular leakage; warrants evaluation for macular edema.' },
+  soft_exudate: { label: 'Cotton-Wool Spots', plain: 'Superficial fluffy white retinal lesions caused by localized axoplasmic stasis in nerve fiber layer infarcts.' },
+  venous_beading: { label: 'Venous Beading', plain: 'Focal caliber irregularity and localized dilation of retinal veins; a hallmark of severe retinal ischemia.' },
+  neovascularization: { label: 'Neovascularization', plain: 'Pathologic preretinal new vessel proliferation (NVD/NVE) driven by ischemia; hallmark of Proliferative DR.' },
 };
 
 export const KNOWN_LESION_TYPES = Object.keys(LESION_GLOSSARY);
