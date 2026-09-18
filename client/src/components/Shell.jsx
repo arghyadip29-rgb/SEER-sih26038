@@ -35,7 +35,7 @@ export default function Shell() {
           <Link className="brand" to="/"><span className="brand-mark">◉</span>SEER</Link>
           <ThemeToggle />
         </div>
-        <div className="side-phc">{session.phc}<span>{session.doctor}</span></div>
+        <div className="side-phc">{session.phc}<span>{session.doctor || session.name} · <strong style={{ color: 'var(--primary)' }}>{session.role === 'phc_worker' ? 'PHC Worker' : 'Doctor'}</strong></span></div>
         <nav className="side-nav">
           {NAV.map((n) => (
             <NavLink key={n.to} to={n.to} end={n.end} className={({ isActive }) => `side-link${isActive ? ' active' : ''}`}>

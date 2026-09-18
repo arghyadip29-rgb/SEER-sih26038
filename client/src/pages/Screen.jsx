@@ -128,11 +128,27 @@ export default function Screen() {
   const save = () => {
     if (!result) { say('Analyze first, then save.'); return; }
     const c = saveCase({
-      id: newCaseId(), grade: result.grade, patient: meta.patient.trim() || 'Unnamed patient',
-      age: meta.age, years: meta.years, eye: meta.eye, camera: meta.cam, confidence: result.confidence,
-      quality: result.quality, sharpness: result.sharpness, status: statusForGrade(result.grade),
-      createdAt: Date.now(), source: result.source || 'upload', seed: result.seed,
+      id: newCaseId(),
+      grade: result.grade,
+      patient: meta.patient.trim() || 'Unnamed patient',
+      age: meta.age,
+      years: meta.years,
+      eye: meta.eye,
+      camera: meta.cam,
+      confidence: result.confidence,
+      quality: result.quality,
+      sharpness: result.sharpness,
+      status: statusForGrade(result.grade),
+      createdAt: Date.now(),
+      source: result.source || 'upload',
+      seed: result.seed,
       aid: result.trace?.aid || null,
+      gradcam_path: result.gradcam_path || null,
+      lesion_analysis: result.lesion_analysis || null,
+      icdr_mapping: result.icdr_mapping || null,
+      referable_dr: result.referable_dr,
+      urgency: result.urgency,
+      model_version: result.model_version || 'seer-matlab-v1.2',
       thumbnail: captureThumb(imgRef.current || canvasRef.current),
     });
     setSavedId(c.id);

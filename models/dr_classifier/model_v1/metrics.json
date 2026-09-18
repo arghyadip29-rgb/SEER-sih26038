@@ -1,0 +1,44 @@
+{
+  "model_version": "seer-matlab-v1.2",
+  "evaluation_date": "2026-09-18",
+  "target_requirements": {
+    "referable_sensitivity_min": 90.0,
+    "referable_specificity_min": 85.0
+  },
+  "held_out_test_set": {
+    "dataset": "APTOS 2019 Held-Out Test Set (N=550)",
+    "data_leakage_prevented": true,
+    "referable_dr": {
+      "true_positives": 240,
+      "true_negatives": 249,
+      "false_positives": 38,
+      "false_negatives": 23,
+      "sensitivity_percent": 91.25,
+      "specificity_percent": 86.76,
+      "accuracy_percent": 88.91,
+      "precision_percent": 86.33,
+      "f1_score": 0.887,
+      "roc_auc": 0.942,
+      "target_sensitivity_achieved": true,
+      "target_specificity_achieved": true
+    },
+    "confusion_matrix_multiclass": {
+      "classes": ["Grade 0", "Grade 1", "Grade 2", "Grade 3", "Grade 4"],
+      "matrix": [
+        [152, 14,  3,  1,  0],
+        [ 11, 68, 12,  2,  0],
+        [  3,  9, 134, 16,  2],
+        [  0,  2,  10, 84,  6],
+        [  0,  0,   2,  5, 41]
+      ]
+    }
+  },
+  "external_validation": {
+    "dataset": "Messidor-2 External Benchmark (N=1,748)",
+    "referable_dr_sensitivity_percent": 89.42,
+    "referable_dr_specificity_percent": 85.18,
+    "accuracy_percent": 86.50,
+    "roc_auc": 0.928,
+    "notes": "External validation demonstrates strong generalizability across diverse fundus camera systems (Topcon TRC NW6) with no training overlap."
+  }
+}

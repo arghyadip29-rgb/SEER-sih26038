@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getCases, STATUS_LABEL } from '../lib/store.js';
-import { downloadReport } from '../lib/api.js';
+import { downloadReport, downloadDoctorReport, downloadPatientReport } from '../lib/api.js';
 
 export default function Reports() {
   const cases = getCases();
@@ -36,10 +36,23 @@ export default function Reports() {
         <section className="card"><div className="card-h"><b>Referral slips</b><span className="mono">EN + हिन्दी LINE</span></div>
           <div className="rows">
             {ref.map((c) => (
-              <div className="row" key={c.id}>
+              <div className="row" key={c.id} style={{ alignItems: 'center' }}>
                 <span className={`pill l${c.grade}`}>G{c.grade}</span>
-                <span className="row-main"><b>{c.patient}</b><small>{c.id} · {STATUS_LABEL[c.status]}</small></span>
-                <button className="btn btn-outline btn-sm" onClick={() => slip(c)}>⬇ Slip</button>
+                <span className="row-main">
+                  <b>{c.patient}</b>
+                  <small>{c.id} · {STATUS_LABEL[c.status] || c.status} · Conf {c.confidence}%</small>
+                </span>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  <button className="btn btn-outline btn-sm" onClick={() => { downloadDoctorReport(c.id); setDone(`Doctor Report for ${c.id} downloaded.`); }}>
+                    ⬇ Doctor
+                  </button>
+                  <button className="btn btn-primary btn-sm" onClick={() => { downloadPatientReport(c.id); setDone(`Patient Report for ${c.id} downloaded.`); }}>
+                    ⬇ Patient
+                  </button>
+                  <Link className="btn btn-outline btn-sm" to={`/app/cases/${c.id}`}>
+                    Dossier →
+                  </Link>
+                </div>
               </div>
             ))}
             {!ref.length && <p className="muted" style={{ padding: 12 }}>No referrals pending. <Link to="/app/screen">Screen someone →</Link></p>}

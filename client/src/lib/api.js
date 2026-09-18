@@ -73,7 +73,73 @@ export async function downloadReport(payload) {
   }
 }
 
-function triggerDownload(text, name) {
+export async function getDoctorReport(id) {
+  try { return await tryFetch(`/api/screenings/${id}/doctor-report`, {}); } catch { return null; }
+}
+
+export async function getPatientReport(id) {
+  try { return await tryFetch(`/api/screenings/${id}/patient-report`, {}); } catch { return null; }
+}
+
+export async function downloadDoctorReport(id) {
+  try {
+    const txt = await tryFetch(`/api/screenings/${id}/doctor-report/download`, {});
+    triggerDownload(txt, `Doctor-Report-${id}.txt`);
+  } catch {
+    triggerDownload(`Doctor Report for ${id} (Offline Draft)`, `Doctor-Report-${id}.txt`);
+  }
+}
+
+export async function downloadPatientReport(id) {
+  try {
+    const txt = await tryFetch(`/api/screenings/${id}/patient-report/download`, {});
+    triggerDownload(txt, `Patient-Report-${id}.txt`);
+  } catch {
+    triggerDownload(`Patient Eye Screening Report for ${id} (Offline Draft)`, `Patient-Report-${id}.txt`);
+  }
+}
+
+export async function approveScreening(id, payload = {}) {
+  return tryFetch(`/api/screenings/${id}/approve`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function overrideScreening(id, payload = {}) {
+  return tryFetch(`/api/screenings/${id}/override`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function referScreening(id, payload = {}) {
+  return tryFetch(`/api/screenings/${id}/refer`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function triggerSync() {
+  try { return await tryFetch('/api/sync', { method: 'POST' }); } catch { return null; }
+}
+
+export async function getSyncStatus() {
+  try { return await tryFetch('/api/sync/status', {}); } catch { return null; }
+}
+
+export function getConfidenceBadge(score) {
+  const s = Number(score) || 0;
+  if (s >= 90) return { label: 'Very High Confidence', color: '#16a34a', bg: '#dcfce7', text: 'Green' };
+  if (s >= 80) return { label: 'High Confidence', color: '#65a30d', bg: '#ecfccb', text: 'Light Green' };
+  if (s >= 60) return { label: 'Moderate Confidence', color: '#ca8a04', bg: '#fef9c3', text: 'Yellow' };
+  return { label: 'Low Confidence', color: '#dc2626', bg: '#fee2e2', text: 'Red' };
+}
+
+export function triggerDownload(text, name) {
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
   a.download = name; a.click();
@@ -96,3 +162,5 @@ export async function submitCorrection(payload) {
 export async function getEvalLast() {
   try { return await tryFetch('/api/eval/last', {}); } catch { return null; }
 }
+
+

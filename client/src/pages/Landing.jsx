@@ -24,7 +24,7 @@ export function AppBar() {
         </nav>
         <ThemeToggle />
         <span className="ps-chip">SIH26038 · MathWorks</span>
-        <Link className="btn btn-primary btn-sm" to="/login">Doctor sign in →</Link>
+        <Link className="btn btn-primary btn-sm" to="/login">Sign In →</Link>
       </div>
     </div>
   );
@@ -110,7 +110,7 @@ export default function Landing() {
             <h1 className="hero-title">Diabetes can steal sight before you feel it. We catch it early.</h1>
             <p className="lead"><strong>SEER</strong> checks a photo of the back of the eye and <strong>shows its work</strong> — what it saw, where, and how sure it is. <strong>ICDR-aligned grading. 30-second verdict.</strong></p>
             <div className="hero-cta">
-              <Link className="btn btn-primary" to="/login">Open Doctor Dashboard →</Link>
+              <Link className="btn btn-primary" to="/login">Open Dashboard →</Link>
               <a className="btn btn-outline" href="#how">See how it checks</a>
             </div>
           </div>

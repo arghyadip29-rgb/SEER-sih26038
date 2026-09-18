@@ -2,12 +2,13 @@
   "name": "drishti",
   "version": "1.0.0",
   "private": true,
-  "description": "Drishti SIH26038 — clinical frontend (client/) + context-layer API (server/)",
+  "type": "module",
   "scripts": {
     "server": "npm --prefix server run dev",
     "client": "npm --prefix client run dev",
     "dev": "concurrently -n api,app -c blue,green \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
     "build": "npm --prefix client run build",
+    "test": "node test/run_tests.js",
     "eval": "npm --prefix server run eval",
     "ping": "npm --prefix server run ping"
   },

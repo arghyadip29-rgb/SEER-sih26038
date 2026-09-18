@@ -1,0 +1,8 @@
+{
+  "files.associations": {
+    "*.m": "matlab"
+  },
+  "C_Cpp.files.exclude": {
+    "**/*.m": true
+  }
+}
