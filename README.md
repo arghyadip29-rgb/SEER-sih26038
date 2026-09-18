@@ -1,4 +1,4 @@
-# SEER / Drishti — Clinical Diabetic Retinopathy Screening Prototype
+# SEER — Clinical Diabetic Retinopathy Screening Prototype
 
 **SEER** is an end-to-end clinical AI screening prototype for early Diabetic Retinopathy (DR) detection in rural Primary Health Centres (PHCs) and district hospitals. It integrates MATLAB Deep Learning models, Grad-CAM attention maps, 4-quadrant lesion localization, offline-first SQLite storage, central PostgreSQL synchronization, role-based access for Doctors and PHC Workers, dual patient/doctor reports, and a clinician triage dashboard.
 
@@ -7,12 +7,12 @@
 ## 1. System Architecture
 
 ```
-                       ┌───────────────────────────────┐
-                       │   React + Vite Client (SPA)   │
-                       │   • Doctor & PHC Worker Roles │
-                       │   • Dual Reports (Doctor/Patient)
-                       │   • Approve / Override / Refer│
-                       └───────────────┬───────────────┘
+                       ┌───────────────────────────────────┐
+                       │   React + Vite Client (SPA)       │
+                       │   • Doctor & PHC Worker Roles     │
+                       │   • Dual Reports (Doctor/Patient) │
+                       │   • Approve / Override / Refer    │
+                       └───────────────┬───────────────────┘
                                        │ HTTP / REST
                        ┌───────────────▼───────────────┐
                        │    Node.js Express Backend    │
