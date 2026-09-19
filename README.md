@@ -18,16 +18,16 @@
                        │    Python/ FastAPI Backend    │
                        │                               │
                        └───↑───────────────────────┬───┘
-            MATLAB Engine  │                       │
+      MATLAB Compiler SDK  │                       │
          ┌─────────────────▼────────┐    ┌─────────▼──────────────────┐
          │   MATLAB Service Layer   │    │      Database Layer        │
          │ • Preprocessing          │    │ • PostgreSQL (Primary)     │
          │ • ResNet50 DL Classifier │    │ • SQLite (Offline-First)   │
          │ • Grad-CAM Heatmap Gen   │    │ • Sync Queue Service       │
-         │ • 4-Quadrant Lesions     │    └────────────────────────────┘
-         │ • ICDR Interpretation    │
-         └─────────│────────────────┘
-              ┌────▼─────────────────────────────────────────┐
+         │ • 4-Quadrant Lesions     │    └─────────┬──────────────────┘
+         │ • ICDR Interpretation    │              │
+         └─────────│────────────────┘              │
+              ┌────▼───────────────────────────────▼─────────┐
               │   Simulink / SimEvents                       │
               │   (Referral Queue & Staffing Capacity Model) │
               └──────────────────────────────────────────────┘
