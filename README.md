@@ -31,97 +31,101 @@ Fundus Image → Quality Check → DR Classification (ResNet-50) + Lesion Segmen
 ---
 ## 3. Detailed Architecture Diagram
 
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                              SEER — SYSTEM ARCHITECTURE                      │
-│                     SIH26038 | Team SeerSix | Team ID 152786                 │
-└──────────────────────────────────────────────────────────────────────────────┘
+```
++------------------------------------------------------------------------------+
+|                         SEER -- SYSTEM ARCHITECTURE                          |
+|                   SIH26038 | Team SeerSix | Team ID 152786                   |
++------------------------------------------------------------------------------+
 
-┌──────────────────────────────────────────────────────────────────────────────┐
-│  LAYER 1 — CLIENT / PRESENTATION                                             │
-│  ┌────────────┐   ┌────────────────┐   ┌────────────────┐                    │
-│  │  Patient   │   │  Doctor         │   │  PHC / ASHA     │                  │
-│  │  Portal    │   │  Dashboard      │   │  Worker Portal  │                  │
-│  └─────┬──────┘   └────────┬────────┘   └────────┬────────┘                  │
-│        └────────────────────┴────────────────────┘                           │
-│                              │                                               │
-│               React.js + Next.js + Tailwind CSS                              │
-└──────────────────────────────┼───────────────────────────────────────────────┘
-                               │  REST / API calls
-                               ▼
-┌──────────────────────────────────────────────────────────────────────────────┐
-│  LAYER 2 — APPLICATION / API                                                 │
-│                                                                              │
-│   ┌───────────────────────┐        ┌────────────────────────────┐            │
-│   │   Python / FastAPI    │◄──────►│   MATLAB Compiler SDK      │            │
-│   │   (Auth, Routing,     │        │   (bridges MATLAB pipeline │            │
-│   │   Business Logic,     │        │   to backend without full) │            │
-│   │   Referral Engine)    │        │   MATLAB runtime)          │            │
-│   └───────────┬───────────┘        └──────────────┬─────────────┘            │
-└───────────────┼─────────────────────────────────────┼────────────────────────┘
-                │                                     │
-                ▼                                     ▼
-┌────────────────────────────────┐   ┌───────────────────────────────────────────┐
-│  LAYER 3 — DATA                │   │  LAYER 4 — MATLAB AI/ML PIPELINE          │
-│                                │   │                                           │
-│  ┌──────────────┐              │   │   Fundus Image Input                      │
-│  │ PostgreSQL   │  (central)   │   │        │                                  │
-│  └──────────────┘              │   │        ▼                                  │
-│  ┌──────────────┐              │   │  ┌──────────────────────────┐             │
-│  │ SQLite       │  (offline/   │   │  │ Image Quality Assessment │             │
-│  │              │   edge PHC)  │   │  │ (blur, illumination,     │             │
-│  └──────────────┘              │   │  │  contrast, FOV)          │             │
-│                                │   │  └───────────┬──────────────┘             │
-│  Stores: patients, screenings, │   │      Poor ─┐  │  Good                     │
-│  referrals, follow-ups,        │   │  Retake ◄──┘  ▼                           │
-│  doctor decisions              │   │        ┌─────────────┴─────────────┐      │
-└────────────────────────────────┘   │        ▼                           ▼      │
-                                      │  ┌────────────┐             ┌──────────┐│
-                                      │  │ ResNet-50  │             │  U-Net   ││
-                                      │  │ (DR Grade  │             │ (Lesion &││
-                                      │  │  0–4)      │             │  Vessel  ││
-                                      │  │            │             │  Masks)  ││
-                                      │  └─────┬──────┘             └────┬─────┘│
-                                      │        │      ┌──────────────┐  │       │
-                                      │        ├─────►│  Grad-CAM    │◄─┤       │
-                                      │        │      │ (Explainab.) │  │       │
-                                      │        │      └──────┬───────┘  │       │
-                                      │        └─────────────┼──────────┘       │
-                                      │                       ▼                 │
-                                      │              Evidence Fusion Engine     │
-                                      │              (ICDR-aligned mapping)     │
-                                      │                       │                 │
-                                      │                       ▼                 │
-                                      │            Explainable Clinical Report  │
-                                      │                                         │
-                                      │  MATLAB Toolboxes used:                 │
-                                      │  Image Processing · Computer Vision ·   │
-                                      │  Deep Learning · Medical Imaging ·      │
-                                      │  Statistics & ML · Parallel Computing   │
-                                      └────────────────┬────────────────────────┘
-                                                       │
-                                                       ▼
-┌──────────────────────────────────────────────────────────────────────────────┐
-│  LAYER 5 — CLINICAL WORKFLOW                                                 │
-│                                                                              │
-│   Doctor Report ──► Doctor Verification ──► Approve / Override / Refer       │
-│                                                       │                      │
-│                                                       ▼                      │
-│                                          Referral & Follow-up Tracking       │
-│                                          (PHC/ASHA · overdue detection ·     │
-│                                           escalation)                        │
-└───────────────────────────────┬──────────────────────────────────────────────┘
-                                │
-                                ▼
-┌──────────────────────────────────────────────────────────────────────────────┐
-│  LAYER 6 — RESOURCE PLANNING / SIMULATION                                    │
-│                                                                              │
-│   Simulink + SimEvents                                                       │
-│   Models: Image Arrival → AI Processing → Doctor Queue →                     │
-│           Ophthalmologist Review → Referral/Clearance                        │
-│                                                                              │
-│   Simulated scale: 100,000 & 500,000 patients                                │
-│   Assumed doctor capacity: ~25 sec/case → ~144 cases/hour                    │
-└──────────────────────────────────────────────────────────────────────────────┘
++------------------------------------------------------------------------------+
+|  LAYER 1 -- CLIENT / PRESENTATION                                            |
+|                                                                                |
+|   +------------+   +----------------+   +----------------+                  |
+|   |  Patient   |   |  Doctor        |   |  PHC / ASHA    |                  |
+|   |  Portal    |   |  Dashboard     |   |  Worker Portal |                  |
+|   +-----+------+   +-------+--------+   +-------+--------+                  |
+|         +-------------------+-------------------+                           |
+|                             |                                                |
+|              React.js + Next.js + Tailwind CSS                              |
++-----------------------------+--------------------------------------------------+
+                               |  REST / API calls
+                               v
++------------------------------------------------------------------------------+
+|  LAYER 2 -- APPLICATION / API                                                |
+|                                                                                |
+|   +-----------------------+        +----------------------------+           |
+|   |  Python / FastAPI     |<------>|  MATLAB Compiler SDK       |           |
+|   |  (Auth, Routing,      |        |  (bridges MATLAB pipeline  |           |
+|   |   Business Logic,     |        |   to backend without full  |           |
+|   |   Referral Engine)    |        |   MATLAB runtime)          |           |
+|   +-----------+-----------+        +--------------+-------------+           |
++---------------+-------------------------------------+------------------------+
+                |                                       |
+                v                                       v
++-------------------------------+   +------------------------------------------+
+|  LAYER 3 -- DATA               |   |  LAYER 4 -- MATLAB AI/ML PIPELINE        |
+|                                 |   |                                          |
+|  +--------------+               |   |   Fundus Image Input                    |
+|  | PostgreSQL   |  (central)    |   |         |                                |
+|  +--------------+               |   |         v                                |
+|  +--------------+               |   |  +---------------------------+          |
+|  | SQLite       |  (offline /   |   |  | Image Quality Assessment  |          |
+|  |              |   edge PHC)   |   |  | (blur, illumination,      |          |
+|  +--------------+               |   |  |  contrast, FOV)           |          |
+|                                 |   |  +-------------+-------------+          |
+|  Stores: patients, screenings,  |   |    Poor -+     |     + Good              |
+|  referrals, follow-ups,         |   |  Retake <+     |     |                  |
+|  doctor decisions               |   |          +-----+-----+                  |
++---------------------------------+   |          v           v                  |
+                                       |  +------------+  +------------+        |
+                                       |  | ResNet-50  |  |  U-Net     |        |
+                                       |  | (DR Grade  |  | (Lesion &  |        |
+                                       |  |  0-4)      |  |  Vessel    |        |
+                                       |  |            |  |  Masks)    |        |
+                                       |  +-----+------+  +-----+------+        |
+                                       |        |    +----------+ |             |
+                                       |        +--->| Grad-CAM |<+             |
+                                       |             | (Explain)|               |
+                                       |             +----+-----+               |
+                                       |                  v                     |
+                                       |         Evidence Fusion Engine         |
+                                       |         (ICDR-aligned mapping)         |
+                                       |                  |                     |
+                                       |                  v                     |
+                                       |     Explainable Clinical Report        |
+                                       |                                        |
+                                       |  MATLAB Toolboxes used:                |
+                                       |  Image Processing . Computer Vision .  |
+                                       |  Deep Learning . Medical Imaging .     |
+                                       |  Statistics & ML . Parallel Computing  |
+                                       +-------------------+--------------------+
+                                                            |
+                                                            v
++------------------------------------------------------------------------------+
+|  LAYER 5 -- CLINICAL WORKFLOW                                                |
+|                                                                                |
+|   Doctor Report --> Doctor Verification --> Approve / Override / Refer       |
+|                                                       |                       |
+|                                                       v                       |
+|                                    Referral & Follow-up Tracking             |
+|                                    (PHC/ASHA . overdue detection .           |
+|                                     escalation)                              |
++------------------------------+-------------------------------------------------+
+                                |
+                                v
++------------------------------------------------------------------------------+
+|  LAYER 6 -- RESOURCE PLANNING / SIMULATION                                   |
+|                                                                                |
+|   Simulink + SimEvents                                                        |
+|   Models: Image Arrival -> AI Processing -> Doctor Queue ->                   |
+|           Ophthalmologist Review -> Referral/Clearance                       |
+|                                                                                |
+|   Simulated scale: 100,000 & 500,000 patients                                 |
+|   Assumed doctor capacity: ~25 sec/case -> ~144 cases/hour                   |
++------------------------------------------------------------------------------+
+```
+
+
 
 ---
 
