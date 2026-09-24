@@ -39,20 +39,20 @@ Fundus Image → Quality Check → DR Classification (ResNet-50) + Lesion Segmen
 
 +------------------------------------------------------------------------------+
 |  LAYER 1 -- CLIENT / PRESENTATION                                            |
-|                                                                                |
-|   +------------+   +----------------+   +----------------+                  |
-|   |  Patient   |   |  Doctor        |   |  PHC / ASHA    |                  |
-|   |  Portal    |   |  Dashboard     |   |  Worker Portal |                  |
-|   +-----+------+   +-------+--------+   +-------+--------+                  |
-|         +-------------------+-------------------+                           |
+|                                                                              |
+|                    +----------------+   +----------------+                   |
+|                    |  Doctor        |   |  PHC / ASHA    |                   |
+|                    |  Dashboard     |   |  Worker Portal |                   |
+|                    +-------+--------+   +-------+--------+                   |
+|                   +----------------------------------------+                 |
 |                             |                                                |
-|              React.js + Next.js + Tailwind CSS                              |
-+-----------------------------+--------------------------------------------------+
+|              React.js + Next.js + Tailwind CSS                               |
++-----------------------------+------------------------------------------------+
                                |  REST / API calls
                                v
 +------------------------------------------------------------------------------+
 |  LAYER 2 -- APPLICATION / API                                                |
-|                                                                                |
+|                                                                              |
 |   +-----------------------+        +----------------------------+           |
 |   |  Python / FastAPI     |<------>|  MATLAB Compiler SDK       |           |
 |   |  (Auth, Routing,      |        |  (bridges MATLAB pipeline  |           |
@@ -73,7 +73,7 @@ Fundus Image → Quality Check → DR Classification (ResNet-50) + Lesion Segmen
 |  |              |   edge PHC)   |   |  | (blur, illumination,      |          |
 |  +--------------+               |   |  |  contrast, FOV)           |          |
 |                                 |   |  +-------------+-------------+          |
-|  Stores: patients, screenings,  |   |    Poor -+     |     + Good              |
+|  Stores: patients, screenings,  |   |    Poor -+     |     + Good             |
 |  referrals, follow-ups,         |   |  Retake <+     |     |                  |
 |  doctor decisions               |   |          +-----+-----+                  |
 +---------------------------------+   |          v           v                  |
