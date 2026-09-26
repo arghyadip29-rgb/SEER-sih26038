@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { getSession, setSession } from '../lib/store.js';
+import { getSession, setSession, setToken } from '../lib/store.js';
 import ThemeToggle from './ThemeToggle.jsx';
 
 const NAV = [
@@ -28,6 +28,7 @@ export default function Shell() {
       </div>
     );
   }
+  const logout = () => { setSession(null); setToken(null); nav('/'); };
   return (
     <div className="shell">
       <aside className="side" aria-label="Workspace">
@@ -35,7 +36,10 @@ export default function Shell() {
           <Link className="brand" to="/"><span className="brand-mark">◉</span>SEER</Link>
           <ThemeToggle />
         </div>
-        <div className="side-phc">{session.phc}<span>{session.doctor || session.name} · <strong style={{ color: 'var(--primary)' }}>{session.role === 'phc_worker' ? 'PHC Worker' : 'Doctor'}</strong></span></div>
+        <div className="side-phc">
+          {session.phc || session.facility}
+          <span>{session.doctor || session.name} · <strong style={{ color: 'var(--primary)' }}>Doctor</strong></span>
+        </div>
         <nav className="side-nav">
           {NAV.map((n) => (
             <NavLink key={n.to} to={n.to} end={n.end} className={({ isActive }) => `side-link${isActive ? ' active' : ''}`}>
@@ -45,7 +49,7 @@ export default function Shell() {
         </nav>
         <div className="side-foot">
           <span className="ps-chip">SIH26038 · :4000 API</span>
-          <button className="btn btn-outline btn-sm btn-block" onClick={() => { setSession(null); nav('/'); }}>Sign out</button>
+          <button className="btn btn-outline btn-sm btn-block" onClick={logout}>Sign out</button>
         </div>
       </aside>
       <div className="main">

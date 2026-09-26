@@ -462,7 +462,7 @@ export function CaseDetail() {
                       Confidence Score: {c.confidence}%
                     </div>
                   </div>
-                  <span style={{ padding: '4px 10px', background: '#fff', borderRadius: 4, fontWeight: 700, color: confBadge.color, border: `1px solid ${confBadge.color}` }}>
+                  <span style={{ padding: '4px 10px', background: 'var(--surface)', borderRadius: 4, fontWeight: 700, color: confBadge.color, border: `1px solid ${confBadge.color}` }}>
                     {confBadge.label} ({confBadge.text})
                   </span>
                 </div>
@@ -536,8 +536,8 @@ export function CaseDetail() {
                 <p className="muted" style={{ margin: 0, fontSize: 11, fontStyle: 'italic', maxWidth: '70%' }}>
                   Notice: Model confidence does not equate to clinical diagnosis. All findings must be validated by an authorized clinician.
                 </p>
-                <button className="btn btn-primary" onClick={() => downloadDoctorReport(c.id)}>
-                  Download Doctor's Report
+                <button className="btn btn-primary" onClick={() => downloadDoctorReport(c.id, c)}>
+                  Download Doctor's Report (PDF)
                 </button>
               </div>
             </div>
@@ -586,8 +586,8 @@ export function CaseDetail() {
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--line)', paddingTop: 14 }}>
                 <span className="muted" style={{ fontSize: 12 }}>Primary Health Centre (PHC) Community Eye Care</span>
-                <button className="btn btn-primary" onClick={() => downloadPatientReport(c.id)}>
-                  Download Patient's Report
+                <button className="btn btn-primary" onClick={() => downloadPatientReport(c.id, c)}>
+                  Download Patient's Report (PDF)
                 </button>
               </div>
             </div>

@@ -1,5 +1,6 @@
 // API client — talks to Express backend, falls back to local mock when offline.
 import { gradeInfo, FALLBACK_FINDINGS, offlineChatResponse } from './icdr.js';
+import { getToken } from './store.js';
 
 // ICDR-aligned fallback verdicts for offline mode
 function buildLocalVerdict(g) {
@@ -74,51 +75,71 @@ export async function downloadReport(payload) {
 }
 
 export async function getDoctorReport(id) {
-  try { return await tryFetch(`/api/screenings/${id}/doctor-report`, {}); } catch { return null; }
+  const token = getToken();
+  try { return await tryFetch(`/api/screenings/${id}/doctor-report`, { headers: token ? { Authorization: `Bearer ${token}` } : {} }); } catch { return null; }
 }
 
 export async function getPatientReport(id) {
   try { return await tryFetch(`/api/screenings/${id}/patient-report`, {}); } catch { return null; }
 }
 
-export async function downloadDoctorReport(id) {
-  try {
-    const txt = await tryFetch(`/api/screenings/${id}/doctor-report/download`, {});
-    triggerDownload(txt, `Doctor-Report-${id}.txt`);
-  } catch {
-    triggerDownload(`Doctor Report for ${id} (Offline Draft)`, `Doctor-Report-${id}.txt`);
+import { downloadDoctorReportPdf, downloadPatientReportPdf } from './pdfReport.js';
+import { getCases } from './store.js';
+
+export async function downloadDoctorReport(id, fallbackCase = null) {
+  const token = getToken();
+  let data = fallbackCase;
+  if (!data) {
+    try {
+      data = await tryFetch(`/api/screenings/${id}/doctor-report`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+    } catch { /* offline fallback */ }
   }
+  if (!data || !data.id) {
+    const local = getCases().find((c) => c.id === id);
+    if (local) data = { ...local, ...(data || {}) };
+  }
+  if (!data) data = { id, grade: 2, confidence: 91, patient: 'Patient' };
+  await downloadDoctorReportPdf(data);
 }
 
-export async function downloadPatientReport(id) {
-  try {
-    const txt = await tryFetch(`/api/screenings/${id}/patient-report/download`, {});
-    triggerDownload(txt, `Patient-Report-${id}.txt`);
-  } catch {
-    triggerDownload(`Patient Eye Screening Report for ${id} (Offline Draft)`, `Patient-Report-${id}.txt`);
+export async function downloadPatientReport(id, fallbackCase = null) {
+  let data = fallbackCase;
+  if (!data) {
+    try {
+      data = await tryFetch(`/api/screenings/${id}/patient-report`, {});
+    } catch { /* offline fallback */ }
   }
+  if (!data || !data.id) {
+    const local = getCases().find((c) => c.id === id);
+    if (local) data = { ...local, ...(data || {}) };
+  }
+  if (!data) data = { id, grade: 0, patient: 'Patient' };
+  await downloadPatientReportPdf(data);
 }
 
 export async function approveScreening(id, payload = {}) {
+  const token = getToken();
   return tryFetch(`/api/screenings/${id}/approve`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
     body: JSON.stringify(payload),
   });
 }
 
 export async function overrideScreening(id, payload = {}) {
+  const token = getToken();
   return tryFetch(`/api/screenings/${id}/override`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
     body: JSON.stringify(payload),
   });
 }
 
 export async function referScreening(id, payload = {}) {
+  const token = getToken();
   return tryFetch(`/api/screenings/${id}/refer`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
     body: JSON.stringify(payload),
   });
 }
@@ -133,10 +154,10 @@ export async function getSyncStatus() {
 
 export function getConfidenceBadge(score) {
   const s = Number(score) || 0;
-  if (s >= 90) return { label: 'Very High Confidence', color: '#16a34a', bg: '#dcfce7', text: 'Green' };
-  if (s >= 80) return { label: 'High Confidence', color: '#65a30d', bg: '#ecfccb', text: 'Light Green' };
-  if (s >= 60) return { label: 'Moderate Confidence', color: '#ca8a04', bg: '#fef9c3', text: 'Yellow' };
-  return { label: 'Low Confidence', color: '#dc2626', bg: '#fee2e2', text: 'Red' };
+  if (s >= 90) return { label: 'Very High Confidence', color: '#16a34a', bg: 'var(--teal-soft)', text: 'Green' };
+  if (s >= 80) return { label: 'High Confidence', color: '#65a30d', bg: 'rgba(101, 163, 13, 0.15)', text: 'Light Green' };
+  if (s >= 60) return { label: 'Moderate Confidence', color: '#ca8a04', bg: 'var(--amber-soft)', text: 'Yellow' };
+  return { label: 'Low Confidence', color: '#dc2626', bg: 'var(--danger-soft)', text: 'Red' };
 }
 
 export function triggerDownload(text, name) {

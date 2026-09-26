@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { paintFundus } from '../lib/fundus.js';
-import seerLogo from '../assets/seer-logo.png';
+import seerLogo from '../assets/seer-logo-new.jpg';
 import ThemeToggle from '../components/ThemeToggle.jsx';
 
 export const LEVELS = [

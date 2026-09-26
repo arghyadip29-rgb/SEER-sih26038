@@ -27,6 +27,8 @@ import { applyRules } from './context/rules.js';
 import { gradeWithVision, imageStats } from './context/provider.js';
 import { recordAnalysis, recordCorrection, stats as memoryStats, recentAudit, recentCorrections } from './context/memory.js';
 import { initDb, pgMode } from './db/store.js';
+import { authenticate, requireDoctor, requireAnyRole, signToken, verifyPassword, dbGetUserByEmail, dbInitAuthSchema } from './auth/auth.js';
+import { seedUsers } from './auth/seed.js';
 
 import { matlabService } from './services/matlab/matlabService.js';
 import { syncService } from './services/sync/syncService.js';
@@ -42,6 +44,8 @@ import {
 } from './db/sqlite.js';
 
 initSqlite();
+dbInitAuthSchema();
+await seedUsers();
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -125,20 +129,43 @@ app.post('/api/analyze', upload.single('image'), async (req, res) => {
   }
 });
 
-// Authentication endpoints (Doctor vs. PHC Worker roles)
-app.post('/api/auth/login', (req, res) => {
-  const { username = 'Clinical User', role = 'doctor', facility = 'PHC Melghat', dutyId = 'MH-PHC-042' } = req.body || {};
-  const cleanRole = role === 'phc_worker' ? 'phc_worker' : 'doctor';
-  const token = `seer-token-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
-  const user = {
-    id: `USR-${Date.now().toString().slice(-4)}`,
-    name: username.trim(),
-    role: cleanRole,
-    facility: facility.trim(),
-    duty_id: dutyId.trim(),
-    login_time: new Date().toISOString(),
-  };
-  res.json({ ok: true, token, user });
+// ──────────────────────────────────────────────
+// Authentication endpoints
+// ──────────────────────────────────────────────
+
+// POST /api/auth/login  — email + password → JWT
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body || {};
+    if (!email?.trim() || !password?.trim()) {
+      return res.status(400).json({ error: 'Email and password are required.' });
+    }
+    const user = dbGetUserByEmail(email.trim());
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid credentials.', code: 'INVALID_CREDENTIALS' });
+    }
+    if (!user.is_active) {
+      return res.status(403).json({ error: 'Account is inactive. Contact administrator.', code: 'INACTIVE_ACCOUNT' });
+    }
+    const passwordValid = await verifyPassword(password, user.password_hash);
+    if (!passwordValid) {
+      return res.status(401).json({ error: 'Invalid credentials.', code: 'INVALID_CREDENTIALS' });
+    }
+    const token = signToken({ sub: user.id, role: user.role });
+    res.json({
+      ok: true,
+      access_token: token,
+      token_type: 'bearer',
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, facility: user.facility },
+    });
+  } catch (e) {
+    res.status(500).json({ error: 'Login failed.', detail: String(e?.message || e) });
+  }
+});
+
+// GET /api/auth/me  — return current user from token
+app.get('/api/auth/me', authenticate, (req, res) => {
+  res.json({ user: req.user });
 });
 
 // Screenings CRUD and Doctor Decision workflows
@@ -199,9 +226,9 @@ app.get('/api/screenings/:id', (req, res) => {
   }
 });
 
-app.post('/api/screenings/:id/approve', (req, res) => {
+app.post('/api/screenings/:id/approve', authenticate, requireDoctor, (req, res) => {
   try {
-    const { doctor_name = 'Doctor', clinical_notes = 'Accepted AI assessment without modification.' } = req.body || {};
+    const { clinical_notes = 'Accepted AI assessment without modification.' } = req.body || {};
     const detail = sqliteGetScreeningDetail(req.params.id);
     if (!detail) return res.status(404).json({ error: 'Screening not found' });
 
@@ -209,8 +236,8 @@ app.post('/api/screenings/:id/approve', (req, res) => {
     const dec = sqliteInsertDecision({
       id: `DEC-${Date.now()}`,
       screening_id: req.params.id,
-      doctor_id: 'DOC-01',
-      doctor_name,
+      doctor_id: req.user.id,
+      doctor_name: req.user.name,
       decision: 'approve',
       original_grade: currentGrade,
       final_grade: currentGrade,
@@ -223,9 +250,9 @@ app.post('/api/screenings/:id/approve', (req, res) => {
   }
 });
 
-app.post('/api/screenings/:id/override', (req, res) => {
+app.post('/api/screenings/:id/override', authenticate, requireDoctor, (req, res) => {
   try {
-    const { doctor_name = 'Doctor', final_grade, override_reason = '', clinical_notes = '' } = req.body || {};
+    const { final_grade, override_reason = '', clinical_notes = '' } = req.body || {};
     if (final_grade === undefined || final_grade === null) {
       return res.status(400).json({ error: 'Override requires final_grade' });
     }
@@ -240,8 +267,8 @@ app.post('/api/screenings/:id/override', (req, res) => {
     const dec = sqliteInsertDecision({
       id: `DEC-${Date.now()}`,
       screening_id: req.params.id,
-      doctor_id: 'DOC-01',
-      doctor_name,
+      doctor_id: req.user.id,
+      doctor_name: req.user.name,
       decision: 'override',
       original_grade: originalGrade,
       final_grade: Number(final_grade),
@@ -255,9 +282,9 @@ app.post('/api/screenings/:id/override', (req, res) => {
   }
 });
 
-app.post('/api/screenings/:id/refer', (req, res) => {
+app.post('/api/screenings/:id/refer', authenticate, requireDoctor, (req, res) => {
   try {
-    const { doctor_name = 'Doctor', referral_priority = 'Priority Referral', target_facility = 'District Hospital Eye Care', clinical_notes = '' } = req.body || {};
+    const { referral_priority = 'Priority Referral', target_facility = 'District Hospital Eye Care', clinical_notes = '' } = req.body || {};
     const detail = sqliteGetScreeningDetail(req.params.id);
     if (!detail) return res.status(404).json({ error: 'Screening not found' });
 
@@ -265,8 +292,8 @@ app.post('/api/screenings/:id/refer', (req, res) => {
     const dec = sqliteInsertDecision({
       id: `DEC-${Date.now()}`,
       screening_id: req.params.id,
-      doctor_id: 'DOC-01',
-      doctor_name,
+      doctor_id: req.user.id,
+      doctor_name: req.user.name,
       decision: 'refer',
       original_grade: originalGrade,
       final_grade: originalGrade,
@@ -281,7 +308,8 @@ app.post('/api/screenings/:id/refer', (req, res) => {
 });
 
 // Dual Report Endpoints
-app.get('/api/screenings/:id/doctor-report', (req, res) => {
+// Doctor report: doctor only
+app.get('/api/screenings/:id/doctor-report', authenticate, requireDoctor, (req, res) => {
   try {
     const detail = sqliteGetScreeningDetail(req.params.id);
     if (!detail) return res.status(404).json({ error: 'Screening not found' });
@@ -360,7 +388,7 @@ app.get('/api/screenings/:id/patient-report', (req, res) => {
   }
 });
 
-app.get('/api/screenings/:id/doctor-report/download', (req, res) => {
+app.get('/api/screenings/:id/doctor-report/download', authenticate, requireDoctor, (req, res) => {
   try {
     const detail = sqliteGetScreeningDetail(req.params.id);
     if (!detail) return res.status(404).send('Screening not found');
@@ -483,7 +511,7 @@ app.get('/api/eval/last', (_req, res) => {
     res.json(JSON.parse(readFileSync(f, 'utf8')));
   } catch { res.json(null); }
 });
-app.post('/api/corrections', async (req, res) => {
+app.post('/api/corrections', authenticate, requireDoctor, async (req, res) => {
   try {
     const { aid = null, caseId = null, correctedGrade, reason = '', doctor = '' } = req.body || {};
     res.json(await recordCorrection({ aid, caseId, correctedGrade, reason, doctor }));

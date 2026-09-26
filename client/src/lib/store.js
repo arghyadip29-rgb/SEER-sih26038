@@ -4,6 +4,7 @@ const CASES_KEY = 'seer-cases-v1';
 const CASES_KEY_LEGACY = 'drishti-cases-v2';
 const SESSION_KEY = 'seer-session-v1';
 const SESSION_KEY_LEGACY = 'drishti-session-v1';
+const TOKEN_KEY = 'seer-jwt-v1';
 
 export function getSession() {
   try {
@@ -14,9 +15,26 @@ export function setSession(s) {
   if (!s) {
     localStorage.removeItem(SESSION_KEY);
     localStorage.removeItem(SESSION_KEY_LEGACY);
+    localStorage.removeItem(TOKEN_KEY);
   } else {
     localStorage.setItem(SESSION_KEY, JSON.stringify(s));
   }
+}
+
+export function getToken() {
+  return localStorage.getItem(TOKEN_KEY) || null;
+}
+export function setToken(t) {
+  if (!t) localStorage.removeItem(TOKEN_KEY);
+  else localStorage.setItem(TOKEN_KEY, t);
+}
+
+// Authenticated fetch: automatically attaches Bearer JWT from storage.
+export async function authFetch(url, options = {}) {
+  const token = getToken();
+  const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return fetch(url, { ...options, headers });
 }
 
 // No seed data — the queue starts empty and fills only with real screenings.
