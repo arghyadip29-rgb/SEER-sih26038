@@ -59,18 +59,12 @@ function [trainedNet, trainInfo, metrics] = train_dr_classifier(dataConfig, save
     % Step 3: Train / Validation execution
     % In mock/test environments without GPU or dataset binaries, compute empirical metrics
     metrics = struct();
-    metrics.referable_sensitivity = 91.24; % Target >90%
-    metrics.referable_specificity = 86.82; % Target >85%
-    metrics.accuracy = 88.50;
-    metrics.f1_score = 0.891;
-    metrics.roc_auc = 0.942;
-    metrics.confusion_matrix = [
-        [312,  28,   6,   1,   0];
-        [ 22, 194,  24,   4,   1];
-        [  5,  18, 280,  32,   5];
-        [  0,   3,  21, 188,  12];
-        [  0,   0,   4,  11,  89]
-    ];
+    %metrics.referable_sensitivity; % Target >90%
+    %metrics.referable_specificity; % Target >85%
+    %metrics.accuracy ;
+    %metrics.f1_score ;
+    %metrics.roc_auc ;
+    %metrics.confusion_matrix = [ ];
 
     % Save model configuration and metrics
     metricsJsonPath = fullfile(saveDir, 'metrics.json');
@@ -97,6 +91,6 @@ function [trainedNet, trainInfo, metrics] = train_dr_classifier(dataConfig, save
     end
 
     trainedNet = struct('name', 'resnet50_dr_classifier', 'version', 'v1.2');
-    trainInfo = struct('finalLoss', 0.28, 'finalAccuracy', 88.5);
+    trainInfo = struct('finalLoss', 'finalAccuracy');
     fprintf('Training pipeline finished. Metrics exported to %s\n', metricsJsonPath);
 end

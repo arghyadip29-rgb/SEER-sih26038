@@ -1,4 +1,4 @@
-# SEER / Drishti — Setup and Installation Guide
+# SEER— Setup and Installation Guide
 
 This guide details the end-to-end setup for the Diabetic Retinopathy (DR) screening prototype.
 

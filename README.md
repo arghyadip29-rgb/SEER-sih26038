@@ -1,93 +1,198 @@
-# SEER / Drishti — Clinical Diabetic Retinopathy Screening Prototype
-
-**SEER** is an end-to-end clinical AI screening prototype for early Diabetic Retinopathy (DR) detection in rural Primary Health Centres (PHCs) and district hospitals. It integrates MATLAB Deep Learning models, Grad-CAM attention maps, 4-quadrant lesion localization, offline-first SQLite storage, central PostgreSQL synchronization, role-based access for Doctors and PHC Workers, dual patient/doctor reports, and a clinician triage dashboard.
+# SEER — Screening Engine using Explainable AI for Retinopathy
+**SIH26038 | Theme: MedTech/BioTech/HealthTech | Team SeerSix | Team ID: 152786**
 
 ---
 
-## 1. System Architecture
+## 1. Overview
+
+SEER is a MATLAB-centered, explainable diabetic retinopathy (DR) screening platform for rural/PHC deployment. It combines image quality checks, DR grading, lesion segmentation, Grad-CAM explainability, ICDR-aligned interpretation, doctor verification, and referral/follow-up tracking — not just a raw classification label.
+
+## MATLAB Pipeline
+Fundus Image → Quality Check → DR Classification (ResNet-50) + Lesion Segmentation (U-Net)
+→ Grad-CAM → Evidence Fusion → ICDR Report → Doctor Verify (Approve/Override/Refer)
+→ Referral Follow-up (PHC/ASHA tracking)
+
+
+---
+
+## 2. Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | React.js, Next.js, Tailwind CSS |
+| Backend | Python/FastAPI, MATLAB Compiler SDK |
+| Classification | ResNet-50 |
+| Segmentation | U-Net (DRIVE, IDRiD) |
+| Explainability | Grad-CAM |
+| MATLAB Toolboxes | Image Processing, Computer Vision, Deep Learning, Medical Imaging, Statistics & ML, Parallel Computing |
+| Simulation | Simulink + SimEvents |
+| Database | PostgreSQL (central), SQLite (offline) |
+
+---
+## 3. Detailed Architecture Diagram
 
 ```
-                       ┌───────────────────────────────┐
-                       │   React + Vite Client (SPA)   │
-                       │   • Doctor & PHC Worker Roles │
-                       │   • Dual Reports (Doctor/Patient)
-                       │   • Approve / Override / Refer│
-                       └───────────────┬───────────────┘
-                                       │ HTTP / REST
-                       ┌───────────────▼───────────────┐
-                       │    Node.js Express Backend    │
-                       │    (Port 4000)                │
-                       └───┬───────────────────────┬───┘
-                           │                       │
-         ┌─────────────────▼────────┐    ┌─────────▼──────────────────┐
-         │   MATLAB Service Layer   │    │      Database Layer        │
-         │ • Preprocessing          │    │ • PostgreSQL (Primary)     │
-         │ • ResNet50 DL Classifier │    │ • SQLite (Offline-First)   │
-         │ • Grad-CAM Heatmap Gen   │    │ • Sync Queue Service       │
-         │ • 4-Quadrant Lesions     │    └────────────────────────────┘
-         │ • ICDR Interpretation    │
-         └──────────────────────────┘
++------------------------------------------------------------------------------+
+|                         SEER -- SYSTEM ARCHITECTURE                          |
+|                   SIH26038 | Team SeerSix | Team ID 152786                   |
++------------------------------------------------------------------------------+
+
++------------------------------------------------------------------------------+
+|  LAYER 1 -- CLIENT / PRESENTATION                                            |
+|                                                                              |
+|                    +----------------+   +----------------+                   |
+|                    |  Doctor        |   |  PHC / ASHA    |                   |
+|                    |  Dashboard     |   |  Worker Portal |                   |
+|                    +-------+--------+   +-------+--------+                   |
+|                   +----------------------------------------+                 |
+|                             |                                                |
+|              React.js + Next.js + Tailwind CSS                               |
++-----------------------------+------------------------------------------------+
+                               |  REST / API calls
+                               v
++------------------------------------------------------------------------------+
+|  LAYER 2 -- APPLICATION / API                                                |
+|                                                                              |
+|   +-----------------------+        +----------------------------+           |
+|   |  Python / FastAPI     |<------>|  MATLAB Compiler SDK       |           |
+|   |  (Auth, Routing,      |        |  (bridges MATLAB pipeline  |           |
+|   |   Business Logic,     |        |   to backend without full  |           |
+|   |   Referral Engine)    |        |   MATLAB runtime)          |           |
+|   +-----------+-----------+        +--------------+-------------+           |
++---------------+-------------------------------------+------------------------+
+                |                                       |
+                v                                       v
++-------------------------------+   +------------------------------------------+
+|  LAYER 3 -- DATA               |   |  LAYER 4 -- MATLAB AI/ML PIPELINE        |
+|                                 |   |                                          |
+|  +--------------+               |   |   Fundus Image Input                    |
+|  | PostgreSQL   |  (central)    |   |         |                                |
+|  +--------------+               |   |         v                                |
+|  +--------------+               |   |  +---------------------------+          |
+|  | SQLite       |  (offline /   |   |  | Image Quality Assessment  |          |
+|  |              |   edge PHC)   |   |  | (blur, illumination,      |          |
+|  +--------------+               |   |  |  contrast, FOV)           |          |
+|                                 |   |  +-------------+-------------+          |
+|  Stores: patients, screenings,  |   |    Poor -+     |     + Good             |
+|  referrals, follow-ups,         |   |  Retake <+     |     |                  |
+|  doctor decisions               |   |          +-----+-----+                  |
++---------------------------------+   |          v           v                  |
+                                       |  +------------+  +------------+        |
+                                       |  | ResNet-50  |  |  U-Net     |        |
+                                       |  | (DR Grade  |  | (Lesion &  |        |
+                                       |  |  0-4)      |  |  Vessel    |        |
+                                       |  |            |  |  Masks)    |        |
+                                       |  +-----+------+  +-----+------+        |
+                                       |        |    +----------+ |             |
+                                       |        +--->| Grad-CAM |<+             |
+                                       |             | (Explain)|               |
+                                       |             +----+-----+               |
+                                       |                  v                     |
+                                       |         Evidence Fusion Engine         |
+                                       |         (ICDR-aligned mapping)         |
+                                       |                  |                     |
+                                       |                  v                     |
+                                       |     Explainable Clinical Report        |
+                                       |                                        |
+                                       |  MATLAB Toolboxes used:                |
+                                       |  Image Processing . Computer Vision .  |
+                                       |  Deep Learning . Medical Imaging .     |
+                                       |  Statistics & ML . Parallel Computing  |
+                                       +-------------------+--------------------+
+                                                            |
+                                                            v
++------------------------------------------------------------------------------+
+|  LAYER 5 -- CLINICAL WORKFLOW                                                |
+|                                                                                |
+|   Doctor Report --> Doctor Verification --> Approve / Override / Refer       |
+|                                                       |                       |
+|                                                       v                       |
+|                                    Referral & Follow-up Tracking             |
+|                                    (PHC/ASHA . overdue detection .           |
+|                                     escalation)                              |
++------------------------------+-------------------------------------------------+
+                                |
+                                v
++------------------------------------------------------------------------------+
+|  LAYER 6 -- RESOURCE PLANNING / SIMULATION                                   |
+|                                                                                |
+|   Simulink + SimEvents                                                        |
+|   Models: Image Arrival -> AI Processing -> Doctor Queue ->                   |
+|           Ophthalmologist Review -> Referral/Clearance                       |
+|                                                                                |
+|   Simulated scale: 100,000 & 500,000 patients                                 |
+|   Assumed doctor capacity: ~25 sec/case -> ~144 cases/hour                   |
++------------------------------------------------------------------------------+
 ```
 
----
 
-## 2. Machine Learning Performance Metrics
-
-Evaluated on held-out test and independent external validation sets with data leakage strictly prevented:
-
-| Metric | Target | Held-Out Test (APTOS 2019, N=550) | External Validation (Messidor-2, N=1,748) | Status |
-|---|:---:|:---:|:---:|:---:|
-| **Referable DR Sensitivity** | **> 90.0%** | **91.25%** | **89.42%** | **ACHIEVED** |
-| **Referable DR Specificity** | **> 85.0%** | **86.76%** | **85.18%** | **ACHIEVED** |
-| **Overall Accuracy** | — | **88.91%** | **86.50%** | — |
-| **ROC-AUC** | — | **0.942** | **0.928** | — |
-
-*Definition of Referable DR: ICDR Grade ≥ 2 (Moderate NPDR, Severe NPDR, PDR).*
-*Decision Threshold: $T = 0.50$ (optimized on 15% validation split and frozen).*
 
 ---
 
-## 3. Core Features
+## 4. Datasets
 
-### MATLAB Deep Learning & Toolboxes
-- **Integrated Toolboxes**: Image Processing, Computer Vision, Deep Learning, Medical Imaging, Simulink, and Statistics and Machine Learning.
-- **Grad-CAM Visualization**: Computes convolutional layer activation maps to highlight microvascular lesions and saves overlay images.
-- **4-Quadrant Lesion Localization**: Counts microaneurysms, hemorrhages, hard exudates, and soft exudates across Superior Temporal (ST), Superior Nasal (SN), Inferior Temporal (IT), and Inferior Nasal (IN) sectors.
-- **ICDR Mapping Layer**: Translates detected features into official ICDR categories with clinical rationales.
+| Dataset | Role | N |
+|---|---|---|
+| APTOS 2019 | Train/Validation | 3662 total (3297 train / 365 val, 10% split) |
+| Messidor-2 | External validation | 1744 matched images |
+| DRIVE | Vessel segmentation | — |
+| IDRiD | Lesion segmentation (MA/HE/EX/SE) | — |
 
-### Offline-First Architecture & Synchronization
-- **SQLite Local Database**: Embedded zero-dependency storage powered by Node 25 `node:sqlite`. Works in field camps without internet.
-- **Two-Way Sync Queue**: Automatically syncs offline screenings, patients, images, and clinical decisions to PostgreSQL when connectivity returns, handling retries and conflict detection.
-
-### Dual Report System
-- **Doctor's Detailed Report**: High-resolution retinal fundus, Grad-CAM overlay, 4-quadrant lesion table, ICDR mapping criteria, model version, prediction timestamp, and prominent color-coded confidence score:
-  - **90–100%**: Very High Confidence (**Green**)
-  - **80–89%**: High Confidence (**Light Green**)
-  - **60–79%**: Moderate Confidence (**Yellow**)
-  - **0–59%**: Low Confidence (**Red**)
-- **Patient's Simple Report**: Plain-language condition summary, highlighted area image, referral urgency, and practical health advice (English & Hindi ready).
-
-### Doctor Clinical Dashboard
-- Distinct triage actions with standardized color semantics:
-  - **Approve** (Green): Clinician accepts AI classification.
-  - **Override** (Orange): Clinician modifies grade with mandatory audit reason.
-  - **Refer** (Dark Red): Priority or urgent referral to ophthalmology center.
+**Referable DR definition:** Grade 0–1 = Non-referable · Grade 2–4 = Referable
+`Sensitivity = TP/(TP+FN)` · `Specificity = TN/(TN+FP)`
 
 ---
 
-## 4. Quick Start
+## 5. Results
 
-```bash
-# 1. Install all dependencies
-npm install
-npm --prefix server install
-npm --prefix client install
+### 5.1 APTOS 2019 — 10% Validation (N=365)
 
-# 2. Run automated test suite
-npm test
+| Metric | Result |
+|---|---:|
+| 5-class accuracy | **84.38%** |
+| Grade 2+ Sensitivity | **97.97%** |
+| Grade 2+ Specificity | **92.63%** |
+| TP / TN / FP / FN | 145 / 201 / 16 / 3 |
 
-# 3. Start full application (client + server concurrently)
-npm run dev
-```
+**Confusion Matrix**
+````text
+              Predicted
+True       0    1    2    3    4
+0        174    3    3    0    0
+1          5   19   13    0    0
+2          2    0   96    1    1
+3          0    0   12    7    0
+4          0    1   14    2   12
+````
 
-For comprehensive instructions, see [SETUP.md](SETUP.md).
+### 5.2 Messidor-2 — Actual External Evaluation (N=1744)
+
+| Metric | Result |
+|---|---:|
+| Grade 2+ Sensitivity | 90.37% |
+| Grade 2+ Specificity | 85.39% |
+| TP / TN / FP / FN | 413 / 1099 / 188 / 44 |
+
+````text
+              Predicted
+True       0    1    2    3    4
+0        900    0   50   40   27
+1          0  199   30   20   21
+2         20   17  310    0    0
+3          3    2    0   70    0
+4          1    1    0    0   33
+````
+
+## 6. Project Status
+
+**Done:** ResNet-50 classification · APTOS pipeline · Grade 2+ evaluation · confusion matrices · Messidor-2 external eval · threshold analysis · Grad-CAM · Simulink/SimEvents resource modeling · doctor/PHC workflow design
+
+**In progress:** U-Net vessel (DRIVE) & lesion (IDRiD) segmentation · lesion-evidence fusion · full MATLAB deployment integration · production frontend/backend integration
+
+---
+
+## Disclaimer
+SEER is a research/prototype system to support DR screening and clinical decision support. It does not replace ophthalmological examination or clinical judgment. All AI findings require clinical verification.
+
+**Team SeerSix | SIH26038**
+````
