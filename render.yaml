@@ -1,0 +1,21 @@
+# SEER backend — one-click deploy on Render (Blueprint).
+# Render dashboard → New → Blueprint → select SEER-sih26038 repo.
+# Uses Node 22 (required for node:sqlite) and an ephemeral disk
+# (prototype data resets on redeploy — attach a disk for persistence).
+services:
+  - type: web
+    name: seer-api
+    runtime: node
+    rootDir: server
+    buildCommand: npm install
+    startCommand: node index.js
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 22.16.0
+      - key: SECRET_KEY
+        generateValue: true
+      - key: SQLITE_PATH
+        value: ./data/seer_offline.sqlite
+      - key: MATLAB_PATH
+        value:
