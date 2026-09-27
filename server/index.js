@@ -214,7 +214,7 @@ app.post('/api/auth/login', async (req, res) => {
     let user = dbGetUserByEmail(sanitizeEmail(identifier));
     if (!user) user = dbGetUserByName(sanitizeName(identifier));
     if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials.', code: 'INVALID_CREDENTIALS' });
+      return res.status(401).json({ error: 'No account found with these details.', code: 'NO_ACCOUNT' });
     }
     if (!user.is_active) {
       return res.status(403).json({ error: 'Account is inactive. Contact administrator.', code: 'INACTIVE_ACCOUNT' });

@@ -28,84 +28,62 @@ function homeFor(role) {
   return '/phc';
 }
 
+async function postJson(url, body) {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json().catch(() => ({}));
+  return { ok: res.ok, data };
+}
+
 export default function Login() {
   const nav = useNavigate();
-  const [mode, setMode] = useState('signin'); // 'signin' | 'signup'
-  const [signupRole, setSignupRole] = useState(null); // null | 'doctor' | 'patient'
-  const [form, setForm] = useState({ email: '', password: '' });
+  const [role, setRole] = useState(null); // null | 'doctor' | 'patient'
   const [doc, setDoc] = useState({ name: '', email: '', password: '', accessCode: '' });
   const [pat, setPat] = useState({ name: '', password: '' });
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
 
-  const switchMode = (m) => { setMode(m); setSignupRole(null); setError(''); };
+  const pickRole = (r) => { setRole(r); setError(''); setNotice(''); };
 
-  const handleSignin = async (e) => {
+  // One "Continue" handles both returning users (login) and first-timers (signup).
+  const handleDoctor = async (e) => {
     e.preventDefault();
-    setError('');
-    const identifier = clean(form.email, 254);
-    if (!identifier || !form.password.trim()) {
-      setError('Email (or patient name) and password are required.');
-      return;
-    }
-    setLoading(true);
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: identifier, password: form.password }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || 'Login failed. Please check your credentials.');
-        return;
-      }
-      storeAuth(data);
-      nav(homeFor(data.user.role));
-    } catch {
-      setError('Cannot reach server. Check your connection.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDoctorSignup = async (e) => {
-    e.preventDefault();
-    setError('');
-    const name = clean(doc.name, 60);
+    setError(''); setNotice('');
     const email = clean(doc.email, 254).toLowerCase();
     const password = doc.password.trim();
-    const accessCode = clean(doc.accessCode, 10);
-    if (!name || NAME_RE.test(name) === false) {
-      setError('Enter your full name (2–60 letters).');
-      return;
-    }
-    if (!EMAIL_RE.test(email)) {
-      setError('Enter a valid work email address.');
-      return;
-    }
-    if (password.length < 8 || !/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) {
-      setError('Password needs 8+ characters with a letter and a number.');
-      return;
-    }
-    if (!accessCode) {
-      setError('Access code is required for doctor registration.');
-      return;
-    }
+    if (!EMAIL_RE.test(email)) { setError('Enter a valid work email address.'); return; }
+    if (!password) { setError('Enter your password.'); return; }
     setLoading(true);
     try {
-      const res = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: 'doctor', name, email, password, accessCode }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || 'Signup failed. Try again.');
+      const login = await postJson('/api/auth/login', { email, password });
+      if (login.ok) {
+        storeAuth(login.data);
+        setNotice(`Welcome back, ${login.data.user.name}.`);
+        nav(homeFor(login.data.user.role));
         return;
       }
-      storeAuth(data);
+      if (login.data.code !== 'NO_ACCOUNT') {
+        setError(login.data.error || 'Sign-in failed. Check your password and try again.');
+        return;
+      }
+      // First visit — create the doctor account (access code verified on the server).
+      const name = clean(doc.name, 60);
+      const accessCode = clean(doc.accessCode, 10);
+      if (!name || !NAME_RE.test(name)) { setError('First visit? Add your full name to create your doctor account.'); return; }
+      if (password.length < 8 || !/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) {
+        setError('New doctor passwords need 8+ characters with a letter and a number.');
+        return;
+      }
+      if (!accessCode) { setError('First visit? Add the access code issued by your facility.'); return; }
+      const signup = await postJson('/api/auth/signup', { role: 'doctor', name, email, password, accessCode });
+      if (!signup.ok) { setError(signup.data.error || 'Could not create your account.'); return; }
+      storeAuth(signup.data);
+      setNotice(`Account created — welcome, ${signup.data.user.name}.`);
       nav('/app');
     } catch {
       setError('Cannot reach server. Check your connection.');
@@ -114,32 +92,32 @@ export default function Login() {
     }
   };
 
-  const handlePatientSignup = async (e) => {
+  const handlePatient = async (e) => {
     e.preventDefault();
-    setError('');
+    setError(''); setNotice('');
     const name = clean(pat.name, 60);
     const password = pat.password.trim();
-    if (!name || NAME_RE.test(name) === false) {
-      setError('Enter your name (2–60 letters).');
-      return;
-    }
-    if (password.length < 6) {
-      setError('Password needs 6+ characters.');
-      return;
-    }
+    if (!name || !NAME_RE.test(name)) { setError('Enter your name (2–60 letters).'); return; }
+    if (!password) { setError('Enter your password.'); return; }
     setLoading(true);
     try {
-      const res = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: 'patient', name, password }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || 'Signup failed. Try again.');
+      const login = await postJson('/api/auth/login', { email: name, password });
+      if (login.ok) {
+        storeAuth(login.data);
+        setNotice(`Welcome back, ${login.data.user.name}.`);
+        nav(homeFor(login.data.user.role));
         return;
       }
-      storeAuth(data);
+      if (login.data.code !== 'NO_ACCOUNT') {
+        setError(login.data.error || 'Sign-in failed. Check your password and try again.');
+        return;
+      }
+      // First visit — create the patient account (no verification needed).
+      if (password.length < 6) { setError('New patient passwords need 6+ characters.'); return; }
+      const signup = await postJson('/api/auth/signup', { role: 'patient', name, password });
+      if (!signup.ok) { setError(signup.data.error || 'Could not create your account.'); return; }
+      storeAuth(signup.data);
+      setNotice(`Account created — welcome, ${signup.data.user.name}.`);
       nav('/phc');
     } catch {
       setError('Cannot reach server. Check your connection.');
@@ -147,6 +125,35 @@ export default function Login() {
       setLoading(false);
     }
   };
+
+  const passField = (id, value, onChange, placeholder, autoComplete) => (
+    <div className="field">
+      <label htmlFor={id}>{id === 'doc-pass' ? 'Password' : 'Password'}</label>
+      <div style={{ position: 'relative' }}>
+        <input
+          id={id}
+          type={showPass ? 'text' : 'password'}
+          value={value}
+          onChange={(e) => onChange(e.target.value.slice(0, 128))}
+          placeholder={placeholder}
+          autoComplete={autoComplete}
+          required
+          disabled={loading}
+          style={{ paddingRight: 44 }}
+          maxLength={128}
+        />
+        <button
+          type="button"
+          onClick={() => setShowPass((v) => !v)}
+          style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 16 }}
+          tabIndex={-1}
+          aria-label={showPass ? 'Hide password' : 'Show password'}
+        >
+          {showPass ? '🙈' : '👁'}
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="auth-wrap">
@@ -178,147 +185,88 @@ export default function Login() {
           </div>
         </div>
 
-        {/* Right card: sign in / sign up */}
+        {/* Right card: unified role-based auth */}
         <div className="card auth-card">
           <div className="card-b">
             <div className="auth-brand-row">
               <Link className="brand" to="/"><span className="brand-mark">◉</span>SEER</Link>
             </div>
-
-            <div className="seg" role="tablist" aria-label="Sign in or create account" style={{ marginBottom: 16 }}>
-              <button type="button" role="tab" aria-selected={mode === 'signin'} aria-pressed={mode === 'signin'} onClick={() => switchMode('signin')}>Sign in</button>
-              <button type="button" role="tab" aria-selected={mode === 'signup'} aria-pressed={mode === 'signup'} onClick={() => switchMode('signup')}>New signup</button>
-            </div>
+            <span className="kicker">Clinical Workspace</span>
+            <h2>Welcome to SEER</h2>
+            <p className="muted" style={{ marginBottom: 16 }}>
+              {role === null
+                ? 'Choose your account type — first visit creates your account, next visits sign you straight in.'
+                : role === 'doctor'
+                  ? 'Doctors sign in with email. First visit also needs your name and facility access code.'
+                  : 'Patients sign in with name. First visit creates your account — no verification needed.'}
+            </p>
 
             {error && (
               <div className="auth-error" role="alert">
                 <span>⚠</span> {error}
               </div>
             )}
-
-            {mode === 'signin' && (
-              <form onSubmit={handleSignin} noValidate>
-                <span className="kicker">Clinical Workspace</span>
-                <h2>Sign in to SEER</h2>
-                <p className="muted" style={{ marginBottom: 20 }}>Doctors use email · patients can use their name.</p>
-                <div className="field">
-                  <label htmlFor="email">Email address or patient name</label>
-                  <input
-                    id="email"
-                    type="text"
-                    value={form.email}
-                    onChange={(e) => setForm({ ...form, email: stripTags(e.target.value).slice(0, 254) })}
-                    placeholder="you@clinic.org or your name"
-                    autoComplete="username"
-                    required
-                    disabled={loading}
-                    maxLength={254}
-                  />
-                </div>
-                <div className="field">
-                  <label htmlFor="password">Password</label>
-                  <div style={{ position: 'relative' }}>
-                    <input
-                      id="password"
-                      type={showPass ? 'text' : 'password'}
-                      value={form.password}
-                      onChange={(e) => setForm({ ...form, password: e.target.value.slice(0, 128) })}
-                      placeholder="••••••••"
-                      autoComplete="current-password"
-                      required
-                      disabled={loading}
-                      style={{ paddingRight: 44 }}
-                      maxLength={128}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPass((v) => !v)}
-                      style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 16 }}
-                      tabIndex={-1}
-                      aria-label={showPass ? 'Hide password' : 'Show password'}
-                    >
-                      {showPass ? '🙈' : '👁'}
-                    </button>
-                  </div>
-                </div>
-                <button className="btn btn-primary btn-block" type="submit" disabled={loading} style={{ marginTop: 8 }}>
-                  {loading ? <><span className="spinner" />Signing in…</> : 'Sign In →'}
-                </button>
-                <Link className="btn btn-outline btn-block" to="/" style={{ marginTop: 8 }}>← Back to landing</Link>
-                <div className="auth-role-hint">
-                  <span className="mono" style={{ fontSize: 11, color: 'var(--muted)' }}>
-                    Doctor → Doctor Dashboard · Patient → Patient Dashboard
-                  </span>
-                </div>
-              </form>
-            )}
-
-            {mode === 'signup' && signupRole === null && (
-              <div>
-                <span className="kicker">New signup</span>
-                <h2>I am a…</h2>
-                <p className="muted" style={{ marginBottom: 16 }}>Choose your account type to continue.</p>
-                <div style={{ display: 'grid', gap: 10 }}>
-                  <button type="button" className="btn btn-outline btn-block" onClick={() => { setSignupRole('doctor'); setError(''); }} style={{ justifyContent: 'flex-start', padding: '14px 16px' }}>
-                    <span aria-hidden="true">🩺</span>
-                    <span style={{ textAlign: 'left' }}><strong>Doctor</strong><br /><small className="muted">Name, work email, password + access code</small></span>
-                  </button>
-                  <button type="button" className="btn btn-outline btn-block" onClick={() => { setSignupRole('patient'); setError(''); }} style={{ justifyContent: 'flex-start', padding: '14px 16px' }}>
-                    <span aria-hidden="true">🧑</span>
-                    <span style={{ textAlign: 'left' }}><strong>Patient</strong><br /><small className="muted">Just your name + password — no verification</small></span>
-                  </button>
-                </div>
-                <Link className="btn btn-outline btn-block" to="/" style={{ marginTop: 12 }}>← Back to landing</Link>
+            {notice && !error && (
+              <div className="auth-error" role="status" style={{ background: 'var(--teal-soft)', borderColor: 'rgba(14,159,138,0.4)', color: 'var(--teal)' }}>
+                <span>✓</span> {notice}
               </div>
             )}
 
-            {mode === 'signup' && signupRole === 'doctor' && (
-              <form onSubmit={handleDoctorSignup} noValidate>
-                <button type="button" className="backlink btn btn-outline btn-sm" onClick={() => { setSignupRole(null); setError(''); }} style={{ marginBottom: 12 }}>← Account type</button>
-                <span className="kicker">Doctor signup</span>
-                <h2>Create doctor account</h2>
-                <p className="muted" style={{ marginBottom: 16 }}>Your access code is verified on the server.</p>
-                <div className="field">
-                  <label htmlFor="doc-name">Full name</label>
-                  <input id="doc-name" type="text" value={doc.name} onChange={(e) => setDoc({ ...doc, name: stripTags(e.target.value).slice(0, 60) })} placeholder="Dr. A. Patil" autoComplete="name" required disabled={loading} maxLength={60} />
-                </div>
+            {role === null && (
+              <div style={{ display: 'grid', gap: 10 }}>
+                <button type="button" className="btn btn-outline btn-block" onClick={() => pickRole('doctor')} style={{ justifyContent: 'flex-start', padding: '14px 16px' }}>
+                  <span aria-hidden="true">🩺</span>
+                  <span style={{ textAlign: 'left' }}><strong>I am a Doctor</strong><br /><small className="muted">Work email + password (+ access code on first visit)</small></span>
+                </button>
+                <button type="button" className="btn btn-outline btn-block" onClick={() => pickRole('patient')} style={{ justifyContent: 'flex-start', padding: '14px 16px' }}>
+                  <span aria-hidden="true">🧑</span>
+                  <span style={{ textAlign: 'left' }}><strong>I am a Patient</strong><br /><small className="muted">Just your name + password</small></span>
+                </button>
+                <Link className="btn btn-outline btn-block" to="/" style={{ marginTop: 4 }}>← Back to landing</Link>
+              </div>
+            )}
+
+            {role === 'doctor' && (
+              <form onSubmit={handleDoctor} noValidate>
+                <button type="button" className="backlink btn btn-outline btn-sm" onClick={() => pickRole(null)} style={{ marginBottom: 12 }}>← Account type</button>
                 <div className="field">
                   <label htmlFor="doc-email">Work email</label>
                   <input id="doc-email" type="email" value={doc.email} onChange={(e) => setDoc({ ...doc, email: stripTags(e.target.value).slice(0, 254) })} placeholder="you@clinic.org" autoComplete="email" required disabled={loading} maxLength={254} />
                 </div>
+                {passField('doc-pass', doc.password, (v) => setDoc({ ...doc, password: v }), '••••••••', 'current-password')}
                 <div className="field">
-                  <label htmlFor="doc-pass">Password (8+ chars, letter + number)</label>
-                  <input id="doc-pass" type={showPass ? 'text' : 'password'} value={doc.password} onChange={(e) => setDoc({ ...doc, password: e.target.value.slice(0, 128) })} placeholder="••••••••" autoComplete="new-password" required disabled={loading} maxLength={128} />
+                  <label htmlFor="doc-name">Full name <span className="muted" style={{ textTransform: 'none', letterSpacing: 0 }}>(first visit only)</span></label>
+                  <input id="doc-name" type="text" value={doc.name} onChange={(e) => setDoc({ ...doc, name: stripTags(e.target.value).slice(0, 60) })} placeholder="Dr. A. Patil" autoComplete="name" disabled={loading} maxLength={60} />
                 </div>
                 <div className="field">
-                  <label htmlFor="doc-code">Access code</label>
-                  <input id="doc-code" type="text" inputMode="numeric" value={doc.accessCode} onChange={(e) => setDoc({ ...doc, accessCode: stripTags(e.target.value).replace(/[^0-9]/g, '').slice(0, 10) })} placeholder="Issued by your facility" required disabled={loading} maxLength={10} />
+                  <label htmlFor="doc-code">Access code <span className="muted" style={{ textTransform: 'none', letterSpacing: 0 }}>(first visit only)</span></label>
+                  <input id="doc-code" type="text" inputMode="numeric" value={doc.accessCode} onChange={(e) => setDoc({ ...doc, accessCode: stripTags(e.target.value).replace(/[^0-9]/g, '').slice(0, 10) })} placeholder="Issued by your facility" disabled={loading} maxLength={10} />
                 </div>
                 <button className="btn btn-primary btn-block" type="submit" disabled={loading} style={{ marginTop: 8 }}>
-                  {loading ? <><span className="spinner" />Creating…</> : 'Create doctor account →'}
+                  {loading ? <><span className="spinner" />Checking…</> : 'Continue →'}
                 </button>
               </form>
             )}
 
-            {mode === 'signup' && signupRole === 'patient' && (
-              <form onSubmit={handlePatientSignup} noValidate>
-                <button type="button" className="backlink btn btn-outline btn-sm" onClick={() => { setSignupRole(null); setError(''); }} style={{ marginBottom: 12 }}>← Account type</button>
-                <span className="kicker">Patient signup</span>
-                <h2>Create patient account</h2>
-                <p className="muted" style={{ marginBottom: 16 }}>Just a name and password — no verification needed.</p>
+            {role === 'patient' && (
+              <form onSubmit={handlePatient} noValidate>
+                <button type="button" className="backlink btn btn-outline btn-sm" onClick={() => pickRole(null)} style={{ marginBottom: 12 }}>← Account type</button>
                 <div className="field">
                   <label htmlFor="pat-name">Patient name</label>
                   <input id="pat-name" type="text" value={pat.name} onChange={(e) => setPat({ ...pat, name: stripTags(e.target.value).slice(0, 60) })} placeholder="Your full name" autoComplete="nickname" required disabled={loading} maxLength={60} />
                 </div>
-                <div className="field">
-                  <label htmlFor="pat-pass">Password (6+ characters)</label>
-                  <input id="pat-pass" type={showPass ? 'text' : 'password'} value={pat.password} onChange={(e) => setPat({ ...pat, password: e.target.value.slice(0, 128) })} placeholder="••••••••" autoComplete="new-password" required disabled={loading} maxLength={128} />
-                </div>
+                {passField('pat-pass', pat.password, (v) => setPat({ ...pat, password: v }), '••••••••', 'current-password')}
                 <button className="btn btn-primary btn-block" type="submit" disabled={loading} style={{ marginTop: 8 }}>
-                  {loading ? <><span className="spinner" />Creating…</> : 'Create patient account →'}
+                  {loading ? <><span className="spinner" />Checking…</> : 'Continue →'}
                 </button>
               </form>
             )}
+
+            <div className="auth-role-hint">
+              <span className="mono" style={{ fontSize: 11, color: 'var(--muted)' }}>
+                Doctor → Doctor Dashboard · Patient → Patient Dashboard
+              </span>
+            </div>
           </div>
         </div>
       </div>
