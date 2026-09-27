@@ -545,50 +545,145 @@ export function CaseDetail() {
         </div>
       )}
 
-      {/* PATIENT REPORT MODAL */}
+      {/* PATIENT REPORT MODAL — official medical report layout */}
       {patientReportModal && (
         <div className="report-modal-backdrop" onClick={() => setPatientReportModal(false)}>
-          <div className="report-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 600 }}>
+          <div className="report-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 760 }}>
             <div className="report-modal-h">
-              <b>Patient Eye Screening Summary</b>
+              <b>Patient Medical Report · {c.id}</b>
               <button className="btn btn-outline btn-sm" onClick={() => setPatientReportModal(false)}>✕ Close</button>
             </div>
-            <div className="report-modal-b" style={{ padding: 24, fontSize: 14 }}>
-              <div style={{ textAlign: 'center', borderBottom: '2px solid var(--line)', paddingBottom: 14, marginBottom: 16 }}>
-                <span className="brand-mark" style={{ width: 32, height: 32, fontSize: 16, display: 'inline-flex' }}>◉</span>
-                <h2 style={{ margin: '6px 0 2px', fontSize: 22 }}>Your Eye Screening Result</h2>
-                <span className="muted" style={{ fontSize: 13 }}>Screening ID: {c.id} · {new Date().toLocaleDateString('en-IN')}</span>
-              </div>
-
-              <div style={{ background: 'var(--surface-2)', padding: 12, borderRadius: 8, marginBottom: 16, display: 'flex', justifyContent: 'space-around' }}>
-                <div><span className="muted" style={{ fontSize: 12 }}>Name</span><br /><b>{c.patient}</b></div>
-                <div><span className="muted" style={{ fontSize: 12 }}>Examined Eye</span><br /><b>{c.eye}</b></div>
-                <div><span className="muted" style={{ fontSize: 12 }}>Screening Level</span><br /><b style={{ color: gi.c }}>Grade {c.grade}</b></div>
-              </div>
-
-              <div style={{ padding: 16, background: gi.c + '15', border: `1.5px solid ${gi.c}`, borderRadius: 8, marginBottom: 16 }}>
-                <div style={{ fontWeight: 700, fontSize: 16, color: gi.c, marginBottom: 4 }}>
-                  {c.grade === 0 ? 'Normal Eye Appearance' : c.grade === 1 ? 'Early Mild Changes' : 'Diabetic Changes Detected'}
+            <div className="report-modal-b">
+              <div className="report-paper" style={{ fontSize: 13.5 }}>
+                {/* Letterhead */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: 15, letterSpacing: '-0.01em' }}>SEER · Community Retinal Health Initiative</div>
+                    <div className="muted" style={{ fontSize: 12 }}>Primary Health Centre — Diabetic Retinopathy Screening Programme (SIH 26038)</div>
+                  </div>
+                  <div style={{ textAlign: 'right', fontSize: 12, whiteSpace: 'nowrap' }}>
+                    <div><b>Report No:</b> {c.id}</div>
+                    <div><b>Date:</b> {new Date(c.createdAt || Date.now()).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                  </div>
                 </div>
-                <p style={{ margin: 0, lineHeight: 1.5 }}>
+                <h2 style={{ textAlign: 'center', fontSize: 17, letterSpacing: '0.02em', margin: '14px 0 2px' }}>DIABETIC RETINOPATHY SCREENING — PATIENT MEDICAL REPORT</h2>
+                <hr className="hair" style={{ borderTopWidth: 2, borderTopColor: '#0f1e33', margin: '8px 0 14px' }} />
+                <p style={{ margin: '0 0 14px' }}><b>RE:</b> {c.patient} — retinal fundus screening of the {c.eye || 'examined eye'} for diabetic eye disease.</p>
+
+                {/* 1. Patient details */}
+                <h3 style={{ fontSize: 13, letterSpacing: '0.06em', margin: '0 0 6px' }}>1. PATIENT DETAILS</h3>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, marginBottom: 14 }}>
+                  <tbody>
+                    <tr>
+                      <td style={{ border: '1px solid #e2e8f0', padding: '6px 10px', width: '25%', color: 'var(--muted)' }}>Name</td>
+                      <td style={{ border: '1px solid #e2e8f0', padding: '6px 10px', width: '25%' }}><b>{c.patient}</b></td>
+                      <td style={{ border: '1px solid #e2e8f0', padding: '6px 10px', width: '25%', color: 'var(--muted)' }}>Age</td>
+                      <td style={{ border: '1px solid #e2e8f0', padding: '6px 10px', width: '25%' }}>{c.age ?? '—'} years</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #e2e8f0', padding: '6px 10px', color: 'var(--muted)' }}>Examined eye</td>
+                      <td style={{ border: '1px solid #e2e8f0', padding: '6px 10px' }}>{c.eye || '—'}</td>
+                      <td style={{ border: '1px solid #e2e8f0', padding: '6px 10px', color: 'var(--muted)' }}>Diabetes duration</td>
+                      <td style={{ border: '1px solid #e2e8f0', padding: '6px 10px' }}>{c.years ?? '—'} years</td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                {/* 2. Examination details */}
+                <h3 style={{ fontSize: 13, letterSpacing: '0.06em', margin: '0 0 6px' }}>2. EXAMINATION DETAILS</h3>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, marginBottom: 14 }}>
+                  <tbody>
+                    <tr>
+                      <td style={{ border: '1px solid #e2e8f0', padding: '6px 10px', width: '25%', color: 'var(--muted)' }}>Screening site</td>
+                      <td style={{ border: '1px solid #e2e8f0', padding: '6px 10px', width: '25%' }}>{s.phc || s.facility || 'Primary Health Centre'}</td>
+                      <td style={{ border: '1px solid #e2e8f0', padding: '6px 10px', width: '25%', color: 'var(--muted)' }}>Camera / device</td>
+                      <td style={{ border: '1px solid #e2e8f0', padding: '6px 10px', width: '25%' }}>{c.camera || 'Portable fundus camera'}</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #e2e8f0', padding: '6px 10px', color: 'var(--muted)' }}>Image quality</td>
+                      <td style={{ border: '1px solid #e2e8f0', padding: '6px 10px' }}>{c.quality ?? '—'}/100 ({c.sharpness || 'Gradable'})</td>
+                      <td style={{ border: '1px solid #e2e8f0', padding: '6px 10px', color: 'var(--muted)' }}>Analysis system</td>
+                      <td style={{ border: '1px solid #e2e8f0', padding: '6px 10px' }}>SEER {c.model_version || 'seer-matlab-v1.2'}</td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                {/* 3. Clinical findings */}
+                <h3 style={{ fontSize: 13, letterSpacing: '0.06em', margin: '0 0 6px' }}>3. CLINICAL FINDINGS</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: c.thumbnail ? '220px 1fr' : '1fr', gap: 12, marginBottom: 14 }}>
+                  {c.thumbnail && (
+                    <figure style={{ margin: 0, border: '1px solid #e2e8f0', borderRadius: 6, overflow: 'hidden' }}>
+                      <img src={c.thumbnail} alt={`Fundus photograph of ${c.patient}`} style={{ width: '100%', display: 'block' }} />
+                      <figcaption className="muted" style={{ fontSize: 11.5, padding: '6px 8px' }}>Fig. 1 — Fundus photograph, {c.eye || 'examined eye'}.</figcaption>
+                    </figure>
+                  )}
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, alignSelf: 'start' }}>
+                    <tbody>
+                      <tr>
+                        <td style={{ border: '1px solid #e2e8f0', padding: '6px 10px', width: '45%', color: 'var(--muted)' }}>ICDR grade</td>
+                        <td style={{ border: '1px solid #e2e8f0', padding: '6px 10px' }}><b style={{ color: gi.c }}>Grade {c.grade} — {gi.title}</b></td>
+                      </tr>
+                      <tr>
+                        <td style={{ border: '1px solid #e2e8f0', padding: '6px 10px', color: 'var(--muted)' }}>Diagnosis confidence level</td>
+                        <td style={{ border: '1px solid #e2e8f0', padding: '6px 10px' }}><b>{c.confidence ?? '—'}%</b></td>
+                      </tr>
+                      <tr>
+                        <td style={{ border: '1px solid #e2e8f0', padding: '6px 10px', color: 'var(--muted)' }}>Referable disease (Grade 2+)</td>
+                        <td style={{ border: '1px solid #e2e8f0', padding: '6px 10px' }}><b>{c.grade >= 2 ? 'YES — referral advised' : 'NO'}</b></td>
+                      </tr>
+                      <tr>
+                        <td style={{ border: '1px solid #e2e8f0', padding: '6px 10px', color: 'var(--muted)' }}>Lesion summary</td>
+                        <td style={{ border: '1px solid #e2e8f0', padding: '6px 10px', fontSize: 12.5 }}>
+                          {lesionTable.filter((l) => Number(l.count) > 0).map((l) => `${l.lesion_type}: ${l.count}`).join(' · ') || 'No lesions detected'}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* 4. Doctor's observations */}
+                <h3 style={{ fontSize: 13, letterSpacing: '0.06em', margin: '0 0 6px' }}>4. DOCTOR&apos;S OBSERVATIONS</h3>
+                <p style={{ margin: '0 0 14px', lineHeight: 1.6 }}>
                   {c.grade >= 2
-                    ? 'Signs of diabetic retinopathy were detected in your retina. It is important to have an in-person eye exam by an eye specialist doctor.'
+                    ? 'Signs of diabetic retinopathy were detected in the retina. An in-person examination by an eye specialist is required to confirm these findings and plan treatment.'
                     : c.grade === 1
-                    ? 'Very minor early changes detected. Good blood sugar control protects your eyes. Re-check in 6 to 12 months.'
-                    : 'No diabetic eye damage was seen today. Continue your prescribed medicines and routine annual eye check-up.'}
+                    ? 'Very minor early vessel changes were observed (microaneurysms). Sight is not currently affected. Blood sugar control and re-screening in 6 to 12 months are advised.'
+                    : 'No diabetic eye damage was observed today. Continue prescribed medication with a routine annual eye examination.'}
+                  {c.validatedBy ? ` Reviewed by ${c.validatedBy}.` : ''}
                 </p>
-              </div>
 
-              <div style={{ marginBottom: 16 }}>
-                <b>Recommended Next Step:</b>
-                <div style={{ marginTop: 4, color: 'var(--ink)' }}>{gi.action}</div>
-              </div>
+                {/* 5. Notes and next steps */}
+                <h3 style={{ fontSize: 13, letterSpacing: '0.06em', margin: '0 0 6px' }}>5. NOTES AND NEXT STEPS</h3>
+                <ol style={{ margin: '0 0 16px', paddingLeft: 20, display: 'grid', gap: 5, lineHeight: 1.55 }}>
+                  <li>{gi.action}</li>
+                  <li>Keep blood sugar (HbA1c) and blood pressure within the targets set by your doctor.</li>
+                  <li>Do not wait for blurred vision — diabetic eye damage often progresses silently.</li>
+                  <li>Carry this report and your diabetes medication record to every consultation.</li>
+                </ol>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--line)', paddingTop: 14 }}>
-                <span className="muted" style={{ fontSize: 12 }}>Primary Health Centre (PHC) Community Eye Care</span>
-                <button className="btn btn-primary" onClick={() => downloadPatientReport(c.id, c)}>
-                  Download Patient's Report (PDF)
-                </button>
+                {/* Signatures */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+                  <div style={{ border: '1px solid #e2e8f0', borderRadius: 6, padding: '10px 12px' }}>
+                    <div className="muted" style={{ fontSize: 11.5 }}>Issuing Primary Health Centre</div>
+                    <div style={{ fontWeight: 700, marginTop: 18 }}>{s.phc || s.facility || 'PHC Health Desk'}</div>
+                    <div className="muted" style={{ fontSize: 12 }}>Health worker / ASHA verified</div>
+                  </div>
+                  <div style={{ border: '1px solid #e2e8f0', borderRadius: 6, padding: '10px 12px' }}>
+                    <div className="muted" style={{ fontSize: 11.5 }}>Reviewing doctor</div>
+                    <div style={{ fontWeight: 700, marginTop: 18 }}>{c.validatedBy || 'Dr. A. Patil, MBBS, MS (Ophthalmology)'}</div>
+                    <div className="muted" style={{ fontSize: 12 }}>{new Date(c.validatedAt || c.createdAt || Date.now()).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                  </div>
+                </div>
+
+                <p className="muted" style={{ fontSize: 11.5, margin: '0 0 4px' }}>
+                  This AI-assisted screening report supports clinical triage and does not replace an ophthalmic slit-lamp examination. All findings require clinician confirmation.
+                </p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #e2e8f0', paddingTop: 10, marginTop: 6 }}>
+                  <span className="muted" style={{ fontSize: 11.5 }}>Page 1 of 1 · SEER (SIH 26038)</span>
+                  <button className="btn btn-primary btn-sm" onClick={() => downloadPatientReport(c.id, c)}>
+                    Download PDF
+                  </button>
+                </div>
               </div>
             </div>
           </div>

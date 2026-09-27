@@ -31,6 +31,7 @@ export default function Shell() {
   const logout = () => { setSession(null); setToken(null); nav('/'); };
   return (
     <div className="shell">
+      <a className="skip-link" href="#workspace-main">Skip to content</a>
       <aside className="side" aria-label="Workspace">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link className="brand" to="/"><span className="brand-mark">◉</span>SEER</Link>
@@ -52,7 +53,7 @@ export default function Shell() {
           <button className="btn btn-outline btn-sm btn-block" onClick={logout}>Sign out</button>
         </div>
       </aside>
-      <div className="main">
+      <div className="main" id="workspace-main">
         <Outlet />
       </div>
     </div>

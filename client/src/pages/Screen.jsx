@@ -405,7 +405,7 @@ export default function Screen() {
                 <p className="flag retake">↻ Retake advised — photo quality {result.quality}/100 is below the gradable threshold. The classification above is advisory only.</p>
               )}
               {result?.needsReview && (
-                <p className="flag review">⚑ Requires ophthalmologist review — {(result.notes || []).join(' ')}</p>
+                <p className="flag review">⚑ Requires ophthalmologist review — {Array.isArray(result.notes) ? result.notes.join(' ') : (result.notes || '')}</p>
               )}
 
               {/* Action Buttons */}

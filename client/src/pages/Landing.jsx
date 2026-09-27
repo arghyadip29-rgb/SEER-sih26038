@@ -23,7 +23,7 @@ export function AppBar() {
           <a href="#rural">For rural PHCs</a>
         </nav>
         <ThemeToggle />
-        <span className="ps-chip">SIH26038 · MathWorks</span>
+        <span className="ps-chip">SIH26038 · MathWorks · UI v2</span>
         <Link className="btn btn-primary btn-sm" to="/login">Sign In →</Link>
       </div>
     </div>
@@ -101,24 +101,34 @@ function Spectrum() {
 
 export default function Landing() {
   return (
-    <>
+    <div className="landing">
+      <a className="skip-link" href="#main">Skip to content</a>
       <AppBar />
       <header className="wrap hero">
         <div className="hero-grid">
-          <div>
-            <span className="eyebrow">For PHCs · Portable-camera ready · English + हिन्दी</span>
-            <h1 className="hero-title">Diabetes can steal sight before you feel it. We catch it early.</h1>
-            <p className="lead"><strong>SEER</strong> checks a photo of the back of the eye and <strong>shows its work</strong> — what it saw, where, and how sure it is. <strong>ICDR-aligned grading. 30-second verdict.</strong></p>
-            <div className="hero-cta">
-              <Link className="btn btn-primary" to="/login">Open Dashboard →</Link>
-              <a className="btn btn-outline" href="#how">See how it checks</a>
+          <div className="hero-copy">
+            <span className="eyebrow rv">For PHCs · Portable-camera ready · English + हिन्दी</span>
+            <h1 className="hero-title rv rv-1">Diabetes can <em className="stroke">steal sight</em> before you feel it. <span className="glow">We catch it early.</span></h1>
+            <p className="lead rv rv-2"><strong>SEER</strong> checks a photo of the back of the eye and <strong>shows its work</strong> — what it saw, where, and how sure it is. <strong>ICDR-aligned grading. 30-second verdict.</strong></p>
+            <div className="hero-cta rv rv-3">
+              <Link className="btn btn-primary btn-lg" to="/login">Open Dashboard →</Link>
+              <a className="btn btn-ghost" href="#demo">Drag the live demo</a>
+            </div>
+            <div className="hero-proof rv rv-4">
+              <img src={seerLogo} alt="SEER project logo" className="hero-proof-logo" />
+              <span>SEER · SIH26038 · MathWorks pipeline</span>
+              <span className="hero-proof-dot" aria-hidden="true" />
+              <span>Grade 2+ catch rate &gt;90%</span>
             </div>
           </div>
-          <div className="hero-logo-wrap">
-            <img src={seerLogo} alt="SEER — AI-Powered Retinal Screening" className="hero-logo" />
+          <div className="hero-visual rv rv-2" id="demo">
+            <div className="hero-visual-glow" aria-hidden="true" />
+            <EyeCompare />
+            <div className="float-chip fc-grade" aria-hidden="true"><b>G2</b><span>referable · 30 sec</span></div>
+            <div className="float-chip fc-ev" aria-hidden="true"><span>Grad-CAM + quadrants</span></div>
           </div>
         </div>
-        <dl className="statstrip">
+        <dl className="statstrip rv rv-5">
           <div><dt>77M+</dt><dd>adults with diabetes in India</dd></div>
           <div><dt>~18%</dt><dd>develop eye changes, silently</dd></div>
           <div><dt>90%</dt><dd>of vision loss is preventable</dd></div>
@@ -126,8 +136,8 @@ export default function Landing() {
         </dl>
       </header>
 
-      <main className="wrap">
-        <section className="section" id="how">
+      <main className="wrap" id="main">
+        <section className="section rv" id="how">
           <div className="sec-head"><span className="kicker">How SEER checks</span>
             <h2>Not a black box. A careful clinical screening aid.</h2></div>
           <ol className="flow3">
@@ -137,14 +147,14 @@ export default function Landing() {
           </ol>
         </section>
 
-        <section className="section" id="grades">
+        <section className="section rv" id="grades">
           <div className="sec-head"><span className="kicker">Grades 0–4 · ICDR Framework</span>
             <h2>One spectrum, one referral line.</h2>
             <p>DR severity terminology based on the International Clinical Diabetic Retinopathy framework. Grade 2 is where referable care starts.</p></div>
           <Spectrum />
         </section>
 
-        <section className="section" id="rural">
+        <section className="section rv" id="rural">
           <div className="sec-head"><span className="kicker">Built for the field</span>
             <h2>Made for dusty rooms, shaky power, slow net.</h2></div>
           <div className="rural">
@@ -154,7 +164,7 @@ export default function Landing() {
               <li><b>30-second doctor check.</b><span>Annotated report + heatmap. Approve, edit, or overrule.</span></li>
               <li><b>District scale.</b><span>Sized for 1,00,000+ patients a year, over 90% catch rate.</span></li>
             </ul>
-            <div className="rural-card dark">
+            <div className="rural-card dark spot">
               <span className="kicker" style={{ color: '#9ec1ff' }}>Accuracy target · SIH26038</span>
               <h3>&gt;90% catch rate<br />&gt;85% correct rejections</h3>
               <p>For <i>referable</i> disease (Grade 2+). Node API mirrors the MATLAB pipeline: quality → enhance → segment → grade → explain.</p>
@@ -163,15 +173,17 @@ export default function Landing() {
           </div>
         </section>
 
-        <div className="banner">
+        <div className="banner rv">
+          <span className="kicker" style={{ color: '#cfe0ff' }}>Field-ready · Offline-first</span>
           <h2>One photo can save a farmer’s sight.</h2>
           <p>Upload a retina photo. Get an ICDR clinical grade, localization evidence, and patient next steps — then ask the assistant anything, in simple words.</p>
-          <div style={{ marginTop: 14, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <Link className="btn btn-white" to="/login">Launch Doctor Dashboard →</Link>
+          <div style={{ marginTop: 16, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <Link className="btn btn-white btn-lg" to="/login">Launch Doctor Dashboard →</Link>
+            <a className="btn btn-ghostlight" href="#how">See how it checks</a>
           </div>
         </div>
       </main>
-      <footer className="wrap foot"><div className="foot-in"><span>SEER · SIH26038 · Explainable AI for Diabetic Retinopathy Screening</span><span>Prototype screening aid — not a medical device. Clinical findings require ophthalmologist confirmation.</span></div></footer>
-    </>
+      <footer className="wrap foot"><div className="foot-in"><span>SEER · SIH26038 · Explainable AI for Diabetic Retinopathy Screening · UI v2</span><span className="foot-legal">Prototype screening aid — not a medical device. Ophthalmologist confirmation required. · Privacy · Terms (prototype, on request)</span></div></footer>
+    </div>
   );
 }

@@ -327,179 +327,228 @@ export async function downloadDoctorReportPdf(caseData) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// 2. PATIENT REPORT PDF
+// 2. PATIENT REPORT PDF — official medical report layout
+// Letterhead · numbered sections · findings table · signatures
 // ─────────────────────────────────────────────────────────────
 export async function downloadPatientReportPdf(caseData) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const W = 210;
   const H = 297;
-  const M = 18;
+  const M = 15;
   const contentW = W - 2 * M;
 
   const id = caseData.id || 'DRI-DEMO';
   const patient = caseData.patient || caseData.patient_name || 'Patient';
   const age = caseData.age ?? '—';
+  const years = caseData.years ?? caseData.diabetes_years ?? '—';
   const eye = caseData.eye || caseData.examined_eye || 'Right eye (OD)';
   const grade = Number(caseData.grade ?? caseData.model_grade ?? 0);
+  const confidence = caseData.confidence ?? caseData.model_confidence ?? '—';
+  const quality = caseData.quality ?? '—';
   const dateStr = new Date(caseData.createdAt || Date.now()).toLocaleDateString('en-IN', {
-    day: 'numeric', month: 'long', year: 'numeric'
+    day: 'numeric', month: 'short', year: 'numeric'
   });
   const gi = gradeInfo(grade);
   const gradeCol = getGradeColor(grade);
+  const reviewer = caseData.validatedBy || caseData.doctor_name || 'Dr. A. Patil, MBBS, MS (Ophthalmology)';
+
+  const section = (num, title) => {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(...COLORS.ink);
+    doc.text(`${num}. ${title}`, M, y);
+    y += 5;
+  };
+
+  const kvRow = (cells) => {
+    // cells: [label, value, label, value] across full width
+    const colW = [contentW * 0.24, contentW * 0.26, contentW * 0.24, contentW * 0.26];
+    let x = M;
+    doc.setDrawColor(...COLORS.line);
+    doc.setLineWidth(0.3);
+    const h = 7;
+    cells.forEach((txt, i) => {
+      doc.rect(x, y, colW[i], h);
+      doc.setFont('helvetica', i % 2 === 0 ? 'bold' : 'normal');
+      doc.setFontSize(i % 2 === 0 ? 6.5 : 8);
+      doc.setTextColor(...(i % 2 === 0 ? COLORS.muted : COLORS.ink));
+      if (i % 2 === 1) { doc.setFont('helvetica', 'bold'); }
+      doc.text(String(txt).slice(0, 42), x + 2.5, y + 4.8);
+      x += colW[i];
+    });
+    y += h;
+  };
 
   let y = M;
 
-  // Header Banner
-  doc.setFillColor(...COLORS.primary);
-  doc.roundedRect(M, y, contentW, 26, 3, 3, 'F');
-
-  doc.setTextColor(255, 255, 255);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(16);
-  doc.text('SEER Community Retinal Health Initiative', M + 8, y + 11);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.setTextColor(219, 234, 254);
-  doc.text('Your Personal Eye Screening Report · आपकी आँख की जाँच रिपोर्ट', M + 8, y + 18);
-
-  y += 32;
-
-  // Patient Card
-  doc.setFillColor(...COLORS.surface2);
-  doc.setDrawColor(...COLORS.line);
-  doc.setLineWidth(0.3);
-  doc.roundedRect(M, y, contentW, 18, 2, 2, 'FD');
-
+  // Letterhead
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   doc.setTextColor(...COLORS.ink);
-  doc.text(String(patient), M + 6, y + 8);
-
+  doc.text('SEER · Community Retinal Health Initiative', M, y + 4);
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8.5);
+  doc.setFontSize(8);
   doc.setTextColor(...COLORS.muted);
-  doc.text(`Age: ${age} yrs   ·   Examined Eye: ${eye}   ·   Date: ${dateStr}   ·   ID: ${id}`, M + 6, y + 14);
+  doc.text('Primary Health Centre — Diabetic Retinopathy Screening Programme (SIH 26038)', M, y + 9);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(...COLORS.ink);
+  doc.text(`Report No: ${id}`, W - M, y + 4, { align: 'right' });
+  doc.text(`Date: ${dateStr}`, W - M, y + 9, { align: 'right' });
+  y += 13;
 
-  y += 24;
-
-  // Status Box
-  const patientFriendlySummary = {
-    0: 'No Signs of Eye Damage (Clear / सुरक्षित)',
-    1: 'Mild Early Changes Detected (Monitoring Needed / शुरुआती लक्षण)',
-    2: 'Moderate Diabetic Changes (Doctor Visit Required / डॉक्टर की सलाह जरूरी)',
-    3: 'Severe Changes Detected (Prompt Hospital Care / तुरंत अस्पताल जाएं)',
-    4: 'Advanced Proliferative Damage (Urgent Treatment Required / अति आवश्यक)',
-  };
-
-  doc.setFillColor(grade === 0 ? 240 : 254, grade === 0 ? 253 : 243, grade === 0 ? 244 : 240);
-  doc.setDrawColor(...gradeCol);
+  // Title + rule
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11.5);
+  doc.setTextColor(...COLORS.ink);
+  doc.text('DIABETIC RETINOPATHY SCREENING — PATIENT MEDICAL REPORT', W / 2, y + 4, { align: 'center' });
+  y += 7;
+  doc.setDrawColor(15, 30, 51);
   doc.setLineWidth(0.8);
-  doc.roundedRect(M, y, contentW, 28, 3, 3, 'FD');
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8);
-  doc.setTextColor(...gradeCol);
-  doc.text('SCREENING RESULT / जाँच परिणाम', M + 6, y + 7);
-
-  doc.setFontSize(13);
-  doc.text(patientFriendlySummary[grade] || 'Screening Completed', M + 6, y + 15);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.setTextColor(...COLORS.ink);
-  doc.text(`Recommendation: ${gi.action}`, M + 6, y + 22);
-
-  y += 34;
-
-  // What this means section
-  doc.setFillColor(...COLORS.surface);
-  doc.setDrawColor(...COLORS.line);
-  doc.roundedRect(M, y, contentW, 36, 2, 2, 'FD');
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
-  doc.setTextColor(...COLORS.ink);
-  doc.text('What Does This Mean? (इसका क्या अर्थ है?)', M + 6, y + 8);
+  doc.line(M, y, W - M, y);
+  y += 5;
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8.5);
-  doc.setTextColor(...COLORS.muted);
-
-  const explanations = {
-    0: 'The photograph shows no visible diabetic changes in the retinal blood vessels. Your vision is currently protected, but annual checkups remain essential because diabetes eye damage develops silently.',
-    1: 'Minor swelling in tiny eye vessels was spotted (microaneurysms). This does not immediately harm your sight, but it is an early warning that your sugar levels are beginning to affect your eyes.',
-    2: 'Spots of bleeding or small protein leaks were detected in your retina. Treatment and specialized eye drops or laser care can prevent vision loss if you visit an eye specialist promptly.',
-    3: 'Several areas of blood vessel blockage were detected in your retina. This carries a high risk of worsening quickly without medical care.',
-    4: 'Fragile new blood vessels have grown in your retina and may bleed. Urgent medical care at a hospital eye clinic is essential to protect your sight.',
-  };
-
-  const lines = doc.splitTextToSize(explanations[grade] || explanations[2], contentW - 12);
-  doc.text(lines, M + 6, y + 15);
-
-  y += 42;
-
-  // Next Steps Section
-  doc.setFillColor(...COLORS.surface2);
-  doc.setDrawColor(...COLORS.line);
-  doc.roundedRect(M, y, contentW, 44, 2, 2, 'FD');
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
   doc.setTextColor(...COLORS.ink);
-  doc.text('Your Action Checklist (आपके अगले कदम):', M + 6, y + 8);
+  const reLines = doc.splitTextToSize(`RE: ${patient} — retinal fundus screening of the ${eye} for diabetic eye disease.`, contentW);
+  doc.text(reLines, M, y + 3);
+  y += 4 + reLines.length * 4;
 
-  const steps = [
-    grade >= 2
-      ? 'Visit an Eye Specialist (Ophthalmologist) within the next 2 to 4 weeks with this slip.'
-      : 'Schedule your next routine eye screening in 12 months at your local PHC.',
-    'Keep your Blood Sugar (HbA1c) and Blood Pressure under the targets advised by your doctor.',
-    'Do not wait for vision blurriness — diabetic eye damage often progresses before you notice any symptoms.',
-    'Carry this slip and your diabetes medication record to every clinical consultation.',
+  // 1. Patient details
+  section('1', 'PATIENT DETAILS');
+  kvRow(['Name', String(patient), 'Age', `${age} years`]);
+  kvRow(['Examined eye', String(eye), 'Diabetes duration', `${years} years`]);
+  y += 3;
+
+  // 2. Examination details
+  section('2', 'EXAMINATION DETAILS');
+  kvRow(['Screening site', 'Primary Health Centre', 'Camera / device', String(caseData.camera || 'Portable fundus camera').slice(0, 42)]);
+  kvRow(['Image quality', `${quality}/100`, 'Analysis system', String(caseData.model_version || 'seer-matlab-v1.2')]);
+  y += 3;
+
+  // 3. Clinical findings (image + table)
+  section('3', 'CLINICAL FINDINGS');
+  const hasThumb = caseData.thumbnail && caseData.thumbnail.startsWith('data:image');
+  const imgW = hasThumb ? 62 : 0;
+  const tableX = M + imgW + (hasThumb ? 5 : 0);
+  const tableW = contentW - imgW - (hasThumb ? 5 : 0);
+  const findings = [
+    ['ICDR grade', `Grade ${grade} — ${gi.title}`],
+    ['Diagnosis confidence level', `${confidence}%`],
+    ['Referable disease (Grade 2+)', grade >= 2 ? 'YES — referral advised' : 'NO'],
+    ['Urgency', gi.action || gi.urgency || '—'],
   ];
+  const rowH = 8;
+  const tableH = findings.length * rowH;
 
+  if (hasThumb) {
+    doc.setDrawColor(...COLORS.line);
+    try {
+      doc.addImage(caseData.thumbnail, 'JPEG', M, y, imgW, tableH, undefined, 'FAST');
+    } catch { /* frame only */ }
+    doc.rect(M, y, imgW, tableH);
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(6.5);
+    doc.setTextColor(...COLORS.muted);
+    doc.text(`Fig. 1 — Fundus, ${eye}.`, M + 2, y + tableH + 4);
+  }
+
+  let ty = y;
+  findings.forEach(([label, val], i) => {
+    doc.setDrawColor(...COLORS.line);
+    doc.setLineWidth(0.3);
+    doc.rect(tableX, ty, tableW * 0.42, rowH);
+    doc.rect(tableX + tableW * 0.42, ty, tableW * 0.58, rowH);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(6.5);
+    doc.setTextColor(...COLORS.muted);
+    doc.text(label, tableX + 2.5, ty + 5.2);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(...(i === 0 ? gradeCol : COLORS.ink));
+    doc.text(String(val).slice(0, 52), tableX + tableW * 0.42 + 2.5, ty + 5.2);
+    ty += rowH;
+  });
+  y += tableH + (hasThumb ? 8 : 3);
+
+  // 4. Doctor's observations
+  section('4', "DOCTOR'S OBSERVATIONS");
+  const observations = {
+    0: 'No diabetic eye damage was observed today. Continue prescribed medication with a routine annual eye examination.',
+    1: 'Very minor early vessel changes were observed (microaneurysms). Sight is not currently affected. Blood sugar control and re-screening in 6 to 12 months are advised.',
+    2: 'Signs of diabetic retinopathy were detected in the retina. An in-person examination by an eye specialist is required to confirm these findings and plan treatment.',
+    3: 'Advanced retinal vessel changes with multi-area involvement were observed. Prompt specialist examination is required.',
+    4: 'Proliferative disease with fragile new vessels was observed. Urgent hospital eye care is required.',
+  };
+  const obsText = `${observations[grade] ?? observations[2]}${caseData.validatedBy ? ` Reviewed by ${caseData.validatedBy}.` : ''}`;
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8.5);
   doc.setTextColor(...COLORS.ink);
+  const obsLines = doc.splitTextToSize(obsText, contentW);
+  doc.text(obsLines, M, y + 3);
+  y += 5 + obsLines.length * 4;
 
-  steps.forEach((step, idx) => {
-    doc.text(`✓   ${step}`, M + 6, y + 17 + idx * 6.5);
+  // 5. Notes and next steps
+  section('5', 'NOTES AND NEXT STEPS');
+  const steps = [
+    gi.action || 'Follow the referral advice on this report.',
+    'Keep blood sugar (HbA1c) and blood pressure within the targets set by your doctor.',
+    'Do not wait for blurred vision — diabetic eye damage often progresses silently.',
+    'Carry this report and your diabetes medication record to every consultation.',
+  ];
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(...COLORS.ink);
+  steps.forEach((s, i) => {
+    const sl = doc.splitTextToSize(`${i + 1}. ${s}`, contentW - 4);
+    doc.text(sl, M + 2, y + 3);
+    y += 1 + sl.length * 4;
   });
+  y += 4;
 
-  y += 50;
-
-  // Signatures and Local PHC stamp area
+  // Signatures
+  const sigW = (contentW - 5) / 2;
+  const sigH = 24;
   doc.setDrawColor(...COLORS.line);
-  doc.rect(M, y, contentW / 2 - 3, 26);
+  doc.rect(M, y, sigW, sigH);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8);
-  doc.setTextColor(...COLORS.ink);
-  doc.text('Issuing Primary Health Centre (PHC)', M + 4, y + 6);
-  doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
-  doc.setTextColor(...COLORS.muted);
-  doc.text('PHC Melghat Sub-district Centre', M + 4, y + 12);
-  doc.text('Health Worker / ASHA Verified', M + 4, y + 17);
-
-  const box2X = M + contentW / 2 + 3;
-  doc.rect(box2X, y, contentW / 2 - 3, 26);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8);
   doc.setTextColor(...COLORS.ink);
-  doc.text('Ophthalmic Reviewer', box2X + 4, y + 6);
+  doc.text('Issuing Primary Health Centre', M + 3, y + 5);
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
-  doc.setTextColor(...COLORS.muted);
-  doc.text('Dr. A. Patil, MBBS, MS (Ophthalmology)', box2X + 4, y + 12);
-  doc.text('District Hospital Tele-Ophthalmology', box2X + 4, y + 17);
-
-  y += 32;
-
-  // Footer
-  doc.setFont('helvetica', 'italic');
+  doc.setFontSize(8);
+  doc.text('PHC Health Desk', M + 3, y + 16);
   doc.setFontSize(7);
   doc.setTextColor(...COLORS.muted);
-  doc.text('SEER (SIH 26038) · Distributed Offline Retinal Screening · www.seer.phc', W / 2, y, { align: 'center' });
+  doc.text('Health worker / ASHA verified', M + 3, y + 20);
+
+  const sig2X = M + sigW + 5;
+  doc.rect(sig2X, y, sigW, sigH);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.5);
+  doc.setTextColor(...COLORS.ink);
+  doc.text('Reviewing doctor', sig2X + 3, y + 5);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.text(reviewer.slice(0, 44), sig2X + 3, y + 16);
+  doc.setFontSize(7);
+  doc.setTextColor(...COLORS.muted);
+  doc.text(dateStr, sig2X + 3, y + 20);
+  y += sigH + 6;
+
+  // Disclaimer + page footer
+  doc.setFont('helvetica', 'italic');
+  doc.setFontSize(6.5);
+  doc.setTextColor(...COLORS.muted);
+  const dis = doc.splitTextToSize('This AI-assisted screening report supports clinical triage and does not replace an ophthalmic slit-lamp examination. All findings require clinician confirmation.', contentW);
+  doc.text(dis, M, y);
+  y += dis.length * 3.2 + 3;
+  doc.setDrawColor(...COLORS.line);
+  doc.line(M, y, W - M, y);
+  doc.setFontSize(7);
+  doc.text('Page 1 of 1 · SEER (SIH 26038)', M, H - 10);
+  doc.text(`Report No: ${id}`, W - M, H - 10, { align: 'right' });
 
   doc.save(`Patient-Report-${id}.pdf`);
 }

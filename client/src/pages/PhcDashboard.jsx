@@ -16,12 +16,12 @@ export function PhcShell() {
   const nav = useNavigate();
   const session = getSession();
 
-  if (!session || session.role !== 'phc_worker') {
+  if (!session || (session.role !== 'phc_worker' && session.role !== 'patient')) {
     return (
       <div className="wrap" style={{ padding: '60px 20px', maxWidth: 520 }}>
         <div className="card"><div className="card-b" style={{ textAlign: 'center' }}>
           <div className="brand" style={{ justifyContent: 'center' }}><span className="brand-mark">◉</span>SEER</div>
-          <p className="muted" style={{ margin: '12px 0 4px' }}>PHC Worker sign-in required.</p>
+          <p className="muted" style={{ margin: '12px 0 4px' }}>Patient sign-in required.</p>
           {session && session.role === 'doctor' && (
             <p className="muted" style={{ margin: '0 0 16px', fontSize: 13 }}>You are signed in as a Doctor. <Link to="/app">Go to Doctor Workspace →</Link></p>
           )}
@@ -42,7 +42,7 @@ export function PhcShell() {
         </div>
         <div className="side-phc">
           {session.phc || session.facility}
-          <span>{session.name} · <strong style={{ color: 'var(--teal)' }}>PHC Worker</strong></span>
+          <span>{session.name} · <strong style={{ color: 'var(--teal)' }}>{session.role === 'patient' ? 'Patient' : 'PHC Worker'}</strong></span>
         </div>
         <nav className="side-nav">
           {PHC_NAV.map((n) => (
@@ -96,7 +96,7 @@ export function PhcOverview() {
     <div className="page">
       <div className="page-head">
         <div>
-          <span className="kicker">PHC Worker Dashboard · {s.phc || s.facility || 'PHC'}</span>
+          <span className="kicker">{s.role === 'patient' ? 'Patient Dashboard' : 'PHC Worker Dashboard'} · {s.phc || s.facility || 'PHC'}</span>
           <h1>Welcome, {s.name}</h1>
           <p className="muted">Field screening queue at a glance.</p>
         </div>

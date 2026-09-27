@@ -27,7 +27,7 @@ import { applyRules } from './context/rules.js';
 import { gradeWithVision, imageStats } from './context/provider.js';
 import { recordAnalysis, recordCorrection, stats as memoryStats, recentAudit, recentCorrections } from './context/memory.js';
 import { initDb, pgMode } from './db/store.js';
-import { authenticate, requireDoctor, requireAnyRole, signToken, verifyPassword, dbGetUserByEmail, dbInitAuthSchema } from './auth/auth.js';
+import { authenticate, requireDoctor, requireAnyRole, signToken, verifyPassword, dbGetUserByEmail, dbGetUserByName, dbInitAuthSchema, sanitizeName, sanitizeEmail, sanitizeText, isValidName, isValidEmail, isValidDoctorPassword, isValidPassword, verifyDoctorAccessCode, hashPassword, dbCreateUser } from './auth/auth.js';
 import { seedUsers } from './auth/seed.js';
 
 import { matlabService } from './services/matlab/matlabService.js';
@@ -133,14 +133,86 @@ app.post('/api/analyze', upload.single('image'), async (req, res) => {
 // Authentication endpoints
 // ──────────────────────────────────────────────
 
-// POST /api/auth/login  — email + password → JWT
+// POST /api/auth/signup — role-based self registration → JWT
+// body: { role: 'doctor'|'patient', name, password, email?, accessCode? }
+// - doctor: name + work email + password + backend-verified access code
+// - patient: patient name + password only, no verification
+app.post('/api/auth/signup', async (req, res) => {
+  try {
+    const role = sanitizeText(req.body?.role, 20).toLowerCase();
+    if (role !== 'doctor' && role !== 'patient') {
+      return res.status(400).json({ error: 'Choose a valid account type: doctor or patient.', code: 'INVALID_ROLE' });
+    }
+
+    const name = sanitizeName(req.body?.name);
+    if (!isValidName(name)) {
+      return res.status(400).json({ error: 'Enter a valid name (2–60 letters, spaces, . \' - only).', code: 'INVALID_NAME' });
+    }
+
+    const password = typeof req.body?.password === 'string' ? req.body.password.trim() : '';
+    if (role === 'doctor') {
+      // ── Doctor: verified access code (backend only) ──
+      const email = sanitizeEmail(req.body?.email);
+      if (!isValidEmail(email)) {
+        return res.status(400).json({ error: 'Enter a valid work email address.', code: 'INVALID_EMAIL' });
+      }
+      if (!isValidDoctorPassword(password)) {
+        return res.status(400).json({ error: 'Password needs 8+ characters with at least one letter and one number.', code: 'WEAK_PASSWORD' });
+      }
+      if (!verifyDoctorAccessCode(req.body?.accessCode)) {
+        return res.status(403).json({ error: 'Invalid access code. Contact your facility administrator.', code: 'INVALID_ACCESS_CODE' });
+      }
+      if (dbGetUserByEmail(email)) {
+        return res.status(409).json({ error: 'An account with this email already exists. Please sign in.', code: 'EMAIL_TAKEN' });
+      }
+      const id = `DOC-${Date.now().toString(36).toUpperCase()}${Math.floor(Math.random() * 1296).toString(36).toUpperCase().padStart(2, '0')}`;
+      const password_hash = await hashPassword(password);
+      dbCreateUser({ id, name, email, password_hash, role: 'doctor', facility: sanitizeText(req.body?.facility, 120) || 'SEER Clinic', duty_id: 'SELF-REG' });
+      const user = dbGetUserByEmail(email);
+      const token = signToken({ sub: user.id, role: user.role });
+      return res.status(201).json({
+        ok: true,
+        access_token: token,
+        token_type: 'bearer',
+        user: { id: user.id, name: user.name, email: user.email, role: user.role, facility: user.facility },
+      });
+    }
+
+    // ── Patient: name + password, no verification ──
+    if (!isValidPassword(password, 6)) {
+      return res.status(400).json({ error: 'Password needs 6+ characters.', code: 'WEAK_PASSWORD' });
+    }
+    if (dbGetUserByName(name)) {
+      return res.status(409).json({ error: 'This patient name is already registered. Please sign in.', code: 'NAME_TAKEN' });
+    }
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '.').replace(/^\.|\.$/g, '').slice(0, 40) || 'patient';
+    const email = `patient.${slug}.${Date.now().toString(36)}@patients.local`;
+    const id = `PAT-${Date.now().toString(36).toUpperCase()}${Math.floor(Math.random() * 1296).toString(36).toUpperCase().padStart(2, '0')}`;
+    const password_hash = await hashPassword(password);
+    dbCreateUser({ id, name, email, password_hash, role: 'patient', facility: 'Self-registered', duty_id: 'SELF-REG' });
+    const user = dbGetUserByName(name);
+    const token = signToken({ sub: user.id, role: user.role });
+    return res.status(201).json({
+      ok: true,
+      access_token: token,
+      token_type: 'bearer',
+      user: { id: user.id, name: user.name, email: '', role: user.role, facility: user.facility },
+    });
+  } catch (e) {
+    res.status(500).json({ error: 'Signup failed.', detail: String(e?.message || e) });
+  }
+});
+
+// POST /api/auth/login  — email (or patient name) + password → JWT
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body || {};
-    if (!email?.trim() || !password?.trim()) {
+    if (!String(email ?? '').trim() || !String(password ?? '').trim()) {
       return res.status(400).json({ error: 'Email and password are required.' });
     }
-    const user = dbGetUserByEmail(email.trim());
+    const identifier = sanitizeText(email, 254);
+    let user = dbGetUserByEmail(sanitizeEmail(identifier));
+    if (!user) user = dbGetUserByName(sanitizeName(identifier));
     if (!user) {
       return res.status(401).json({ error: 'Invalid credentials.', code: 'INVALID_CREDENTIALS' });
     }
@@ -441,25 +513,47 @@ app.get('/api/screenings/:id/patient-report/download', (req, res) => {
     const detail = sqliteGetScreeningDetail(req.params.id);
     if (!detail) return res.status(404).send('Screening not found');
     const p = detail.prediction || {};
-    const text = `===============================================================
-SEER RETINAL SCREENING — PATIENT EYE REPORT
+    const text = `SEER · Community Retinal Health Initiative
+Primary Health Centre — Diabetic Retinopathy Screening Programme (SIH 26038)
+Report No: ${detail.id} | Date: ${new Date(detail.created_at).toLocaleDateString('en-IN')}
 ===============================================================
-Screening Reference : ${detail.id}
-Date                : ${new Date(detail.created_at).toLocaleDateString('en-IN')}
-Patient Name        : ${detail.patient?.name || 'Patient'}
-Examined Eye        : ${detail.examined_eye}
+DIABETIC RETINOPATHY SCREENING — PATIENT MEDICAL REPORT
+===============================================================
+RE: ${detail.patient?.name || 'Patient'} — retinal fundus screening of the ${detail.examined_eye || 'examined eye'} for diabetic eye disease.
 
-YOUR SCREENING RESULT:
+1. PATIENT DETAILS
 ---------------------------------------------------------------
-Diabetic Eye Grade  : Grade ${p.grade ?? 0} (Scale: 0 to 4)
-Urgency             : ${p.urgency || 'Consult PHC doctor'}
+Name: ${detail.patient?.name || 'Patient'} | Age: ${detail.patient?.age ?? '—'} years
+Examined eye: ${detail.examined_eye || '—'} | Diabetes duration: ${detail.patient?.diabetes_years ?? '—'} years
 
-WHAT THIS MEANS:
+2. EXAMINATION DETAILS
 ---------------------------------------------------------------
-${p.grade >= 2 ? '• Retinal changes related to diabetes were detected.\n• An eye specialist evaluation is recommended.\n• Early eye treatment helps protect and save vision.' : '• No urgent diabetic retinopathy damage was seen today.\n• Keep taking your prescribed medicines and check blood sugar regularly.\n• Re-test eyes again next year.'}
+Screening site: Primary Health Centre | Camera: ${detail.camera_device || 'Portable fundus camera'}
+Image quality: ${p.quality ?? '—'}/100 | Analysis system: SEER ${p.model_version || 'seer-matlab-v1.2'}
 
-Thank you for participating in the community diabetic eye screening.
-===============================================================`;
+3. CLINICAL FINDINGS
+---------------------------------------------------------------
+ICDR grade: Grade ${p.grade ?? 0} (Scale: 0 to 4)
+Diagnosis confidence level: ${p.confidence ?? '—'}%
+Referable disease (Grade 2+): ${(p.grade ?? 0) >= 2 ? 'YES — referral advised' : 'NO'}
+Urgency: ${p.urgency || 'Consult PHC doctor'}
+
+4. DOCTOR'S OBSERVATIONS
+---------------------------------------------------------------
+${(p.grade ?? 0) >= 2 ? 'Signs of diabetic retinopathy were detected. An in-person eye specialist examination is required to confirm these findings and plan treatment.' : (p.grade ?? 0) === 1 ? 'Very minor early vessel changes observed. Sight is not currently affected. Control blood sugar and re-screen in 6 to 12 months.' : 'No diabetic eye damage was observed today. Continue prescribed medication with a routine annual eye examination.'}${detail.decision?.doctor_name ? ` Reviewed by ${detail.decision.doctor_name}.` : ''}
+
+5. NOTES AND NEXT STEPS
+---------------------------------------------------------------
+1. ${(p.grade ?? 0) >= 2 ? 'Visit an eye specialist within 2 to 4 weeks with this report.' : 'Schedule your next routine eye screening in 12 months at your local PHC.'}
+2. Keep blood sugar (HbA1c) and blood pressure within your doctor's targets.
+3. Do not wait for blurred vision — diabetic eye damage often progresses silently.
+4. Carry this report and your diabetes medication record to every consultation.
+
+Issuing PHC: PHC Health Desk (Health worker / ASHA verified)
+Reviewing doctor: ${detail.decision?.doctor_name || 'Dr. A. Patil, MBBS, MS (Ophthalmology)'}
+
+This AI-assisted screening report supports clinical triage and does not replace an ophthalmic slit-lamp examination. All findings require clinician confirmation.
+Page 1 of 1 · SEER (SIH 26038)`;
     res.type('text/plain').attachment(`Patient-Report-${detail.id}.txt`).send(text);
   } catch (e) {
     res.status(500).send('Error generating patient slip: ' + e.message);

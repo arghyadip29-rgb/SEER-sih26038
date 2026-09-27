@@ -43,7 +43,13 @@ export function verifyToken(token) {
 
 export function dbGetUserByEmail(email) {
   const db = getSqliteDb();
-  return db.prepare('SELECT * FROM auth_users WHERE email = ? AND is_active = 1').get(email.toLowerCase().trim());
+  return db.prepare('SELECT * FROM auth_users WHERE email = ? AND is_active = 1').get(String(email || '').toLowerCase().trim());
+}
+
+// Patient login uses display name (no email). Case-insensitive lookup.
+export function dbGetUserByName(name) {
+  const db = getSqliteDb();
+  return db.prepare('SELECT * FROM auth_users WHERE lower(name) = lower(?) AND is_active = 1').get(String(name || '').trim());
 }
 
 export function dbGetUserById(id) {
@@ -67,13 +73,92 @@ export function dbInitAuthSchema() {
       name TEXT NOT NULL,
       email TEXT NOT NULL UNIQUE,
       password_hash TEXT NOT NULL,
-      role TEXT NOT NULL CHECK(role IN ('doctor', 'phc_worker')),
+      role TEXT NOT NULL CHECK(role IN ('doctor', 'phc_worker', 'patient')),
       facility TEXT DEFAULT '',
       duty_id TEXT DEFAULT '',
       is_active INTEGER NOT NULL DEFAULT 1,
       created_at INTEGER NOT NULL
     );
   `);
+  // Migrate DBs created before the 'patient' role existed (old CHECK rejects it).
+  try {
+    const sql = db.prepare(`SELECT sql FROM sqlite_master WHERE name = 'auth_users'`).get()?.sql || '';
+    if (sql && !sql.includes(`'patient'`)) {
+      db.exec('PRAGMA foreign_keys=OFF');
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS auth_users_new (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          email TEXT NOT NULL UNIQUE,
+          password_hash TEXT NOT NULL,
+          role TEXT NOT NULL CHECK(role IN ('doctor', 'phc_worker', 'patient')),
+          facility TEXT DEFAULT '',
+          duty_id TEXT DEFAULT '',
+          is_active INTEGER NOT NULL DEFAULT 1,
+          created_at INTEGER NOT NULL
+        );
+        INSERT OR IGNORE INTO auth_users_new (id, name, email, password_hash, role, facility, duty_id, is_active, created_at)
+          SELECT id, name, email, password_hash, role, facility, duty_id, is_active, created_at FROM auth_users;
+        DROP TABLE auth_users;
+        ALTER TABLE auth_users_new RENAME TO auth_users;
+      `);
+      db.exec('PRAGMA foreign_keys=ON');
+      console.log('[Auth] Migrated auth_users role CHECK to include patient.');
+    }
+  } catch (err) {
+    console.error('[Auth] Role migration failed:', err?.message || err);
+  }
+}
+
+// ──────────────────────────────────────────────
+// Input sanitization (backend is authoritative —
+// frontend mirrors these rules for fast feedback)
+// ──────────────────────────────────────────────
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const NAME_RE = /^[A-Za-z][A-Za-z .'\-]{0,58}[A-Za-z.'\-]$/;
+// Doctor access codes live ONLY on the backend. Never send this list to the client.
+const DOCTOR_ACCESS_CODES = new Set(['100', '101', '102', '103']);
+
+// Strip HTML tags, trim, collapse whitespace, enforce max length.
+export function sanitizeText(value, max = 200) {
+  let s = String(value ?? '');
+  s = s.replace(/<[^>]*>/g, '');
+  s = s.replace(/[\u0000-\u001f\u007f]/g, '');
+  s = s.trim().replace(/\s+/g, ' ');
+  return s.slice(0, max);
+}
+
+export function sanitizeName(value) {
+  return sanitizeText(value, 60);
+}
+
+export function sanitizeEmail(value) {
+  return String(value ?? '').trim().toLowerCase().slice(0, 254);
+}
+
+export function isValidName(name) {
+  return typeof name === 'string' && name.length >= 2 && name.length <= 60 && NAME_RE.test(name);
+}
+
+export function isValidEmail(email) {
+  return typeof email === 'string' && email.length >= 5 && email.length <= 254 && EMAIL_RE.test(email);
+}
+
+export function isValidPassword(password, min = 8) {
+  if (typeof password !== 'string') return false;
+  const p = password.trim();
+  return p.length >= min && p.length <= 128;
+}
+
+export function isValidDoctorPassword(password) {
+  if (!isValidPassword(password, 8)) return false;
+  const p = password.trim();
+  return /[A-Za-z]/.test(p) && /[0-9]/.test(p);
+}
+
+export function verifyDoctorAccessCode(code) {
+  return DOCTOR_ACCESS_CODES.has(String(code ?? '').trim());
 }
 
 // ──────────────────────────────────────────────

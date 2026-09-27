@@ -22,14 +22,19 @@ import {
 import { getSession } from './lib/store.js';
 
 // ─── Route guard: redirect to /login if not authenticated ────────────────────────
+function homeFor(role) {
+  if (role === 'doctor') return '/app';
+  if (role === 'patient' || role === 'phc_worker') return '/phc';
+  return '/login';
+}
+
 function RequireAuth({ children, role }) {
   const session = getSession();
   if (!session) return <Navigate to="/login" replace />;
-  if (role && session.role !== role) {
+  const allowed = Array.isArray(role) ? role : role ? [role] : null;
+  if (allowed && !allowed.includes(session.role)) {
     // Wrong role: redirect to their dashboard
-    if (session.role === 'doctor') return <Navigate to="/app" replace />;
-    if (session.role === 'phc_worker') return <Navigate to="/phc" replace />;
-    return <Navigate to="/login" replace />;
+    return <Navigate to={homeFor(session.role)} replace />;
   }
   return children;
 }
@@ -37,8 +42,7 @@ function RequireAuth({ children, role }) {
 // ─── Redirect logged-in users away from /login ────────────────────────────────
 function PublicOnly({ children }) {
   const session = getSession();
-  if (session?.role === 'doctor') return <Navigate to="/app" replace />;
-  if (session?.role === 'phc_worker') return <Navigate to="/phc" replace />;
+  if (session?.role) return <Navigate to={homeFor(session.role)} replace />;
   return children;
 }
 
@@ -82,10 +86,10 @@ export default function App() {
           <Route path="settings" element={<Settings />} />
         </Route>
 
-        {/* PHC Worker workspace (/phc/*) */}
+        {/* Patient + PHC Worker workspace (/phc/*) */}
         <Route
           path="/phc"
-          element={<RequireAuth role="phc_worker"><PhcShell /></RequireAuth>}
+          element={<RequireAuth role={['phc_worker', 'patient']}><PhcShell /></RequireAuth>}
         >
           <Route index element={<PhcOverview />} />
           <Route path="register" element={<PhcRegister />} />
